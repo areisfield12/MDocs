@@ -24,11 +24,11 @@ export function Modal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content
           className={cn(
             "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50",
-            "bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto",
+            "bg-surface rounded-lg shadow-2xl border border-border w-full max-w-lg max-h-[85vh] overflow-y-auto",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -37,24 +37,24 @@ export function Modal({
             className
           )}
         >
-          <div className="flex items-start justify-between p-6 border-b border-gray-100">
+          <div className="flex items-start justify-between px-5 py-4 border-b border-border-secondary">
             <div>
-              <Dialog.Title className="text-lg font-semibold text-gray-900">
+              <Dialog.Title className="text-[14px] font-semibold text-fg">
                 {title}
               </Dialog.Title>
               {description && (
-                <Dialog.Description className="text-sm text-gray-500 mt-1">
+                <Dialog.Description className="text-sm text-fg-tertiary mt-1">
                   {description}
                 </Dialog.Description>
               )}
             </div>
             <Dialog.Close asChild>
-              <button className="text-gray-400 hover:text-gray-600 transition-colors ml-4 mt-0.5">
+              <button className="text-fg-tertiary hover:text-fg-secondary transition-colors ml-4 mt-0.5">
                 <X className="h-5 w-5" />
               </button>
             </Dialog.Close>
           </div>
-          <div className="p-6">{children}</div>
+          <div className="px-5 py-4">{children}</div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

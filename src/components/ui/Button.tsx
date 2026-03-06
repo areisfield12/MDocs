@@ -25,20 +25,20 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(
-          "inline-flex items-center justify-center gap-2 font-medium rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none",
+          "inline-flex items-center justify-center gap-2 font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fg/20 disabled:opacity-50 disabled:pointer-events-none",
           // Variants
           variant === "primary" &&
-            "bg-blue-600 text-white hover:bg-blue-700",
+            "bg-fg text-fg-inverted hover:bg-fg/90",
           variant === "secondary" &&
-            "bg-gray-100 text-gray-900 hover:bg-gray-200",
+            "bg-surface-tertiary text-fg-secondary hover:bg-surface-hover",
           variant === "ghost" &&
-            "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+            "text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary",
           variant === "danger" &&
             "bg-red-600 text-white hover:bg-red-700",
           // Sizes
-          size === "sm" && "text-xs px-3 py-1.5 h-7",
-          size === "md" && "text-sm px-4 py-2 h-9",
-          size === "lg" && "text-base px-5 py-2.5 h-11",
+          size === "sm" && "text-[12px] px-3 py-1.5 h-7",
+          size === "md" && "text-[13px] px-4 py-2 h-9",
+          size === "lg" && "text-[14px] px-5 py-2.5 h-10",
           className
         )}
         {...props}

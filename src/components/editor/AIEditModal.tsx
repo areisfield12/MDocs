@@ -91,15 +91,15 @@ export function AIEditModal({
       <div className="space-y-4">
         {/* Selected text preview */}
         <div>
-          <div className="text-xs font-medium text-gray-500 mb-1">Selected text</div>
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm text-gray-700 max-h-24 overflow-y-auto line-clamp-4">
+          <div className="text-xs font-medium text-fg-tertiary mb-1">Selected text</div>
+          <div className="bg-surface-secondary border border-border rounded-lg p-3 text-sm text-fg-secondary max-h-24 overflow-y-auto line-clamp-4">
             {selectedText}
           </div>
         </div>
 
         {/* Instruction input */}
         <div>
-          <div className="text-xs font-medium text-gray-500 mb-1">
+          <div className="text-xs font-medium text-fg-tertiary mb-1">
             Instruction
           </div>
           <textarea
@@ -111,9 +111,9 @@ export function AIEditModal({
               `"Make this more concise"\n"Rewrite in a friendly professional tone"\n"Expand with an example"`
             }
             rows={3}
-            className="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="w-full text-[13px] px-3 py-2 border border-border rounded-md bg-surface resize-none focus:outline-none focus:ring-2 focus:ring-fg/10 focus:border-fg-tertiary"
           />
-          <div className="text-xs text-gray-400 mt-1">⌘↵ to send</div>
+          <div className="text-xs text-fg-tertiary mt-1">⌘↵ to send</div>
         </div>
 
         {/* Quick prompts */}
@@ -127,7 +127,7 @@ export function AIEditModal({
             <button
               key={prompt}
               onClick={() => setInstruction(prompt)}
-              className="text-xs px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full transition-colors"
+              className="text-xs px-2.5 py-1 bg-surface-tertiary hover:bg-surface-hover text-fg-secondary rounded-full transition-colors"
             >
               {prompt}
             </button>
@@ -137,11 +137,11 @@ export function AIEditModal({
         {/* AI result */}
         {(result || streaming) && (
           <div>
-            <div className="flex items-center gap-1.5 text-xs font-medium text-violet-600 mb-1">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-fg-tertiary mb-1">
               <Sparkles className="h-3.5 w-3.5" />
               {streaming ? "Writing..." : "Suggested edit"}
             </div>
-            <div className="bg-violet-50 border border-violet-100 rounded-lg p-3 text-sm text-gray-800 whitespace-pre-wrap min-h-16 max-h-48 overflow-y-auto">
+            <div className="bg-surface-secondary border border-border rounded-md p-3 text-[13px] text-fg whitespace-pre-wrap min-h-16 max-h-48 overflow-y-auto">
               {result}
               {streaming && <span className="animate-pulse">▌</span>}
             </div>
@@ -154,7 +154,7 @@ export function AIEditModal({
             onClick={handleAsk}
             loading={streaming}
             disabled={!instruction.trim()}
-            className="bg-violet-600 hover:bg-violet-700 text-white"
+            className="bg-fg hover:bg-fg/90 text-fg-inverted"
           >
             <Sparkles className="h-4 w-4" />
             {result ? "Retry" : "Ask AI"}

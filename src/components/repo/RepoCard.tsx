@@ -11,26 +11,26 @@ export function RepoCard({ repo }: RepoCardProps) {
   return (
     <Link
       href={`/repos/${repo.owner}/${repo.name}`}
-      className="block bg-white border border-gray-200 rounded-xl p-5 hover:border-blue-300 hover:shadow-sm transition-all"
+      className="block bg-surface border border-border rounded-lg p-4 hover:bg-surface-hover transition-all"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1">
             {repo.private && (
-              <Lock className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+              <Lock className="h-3.5 w-3.5 text-fg-tertiary flex-shrink-0" />
             )}
-            <h3 className="font-semibold text-gray-900 truncate">
+            <h3 className="font-semibold text-fg truncate">
               {repo.owner}/{repo.name}
             </h3>
           </div>
 
           {repo.description && (
-            <p className="text-sm text-gray-500 line-clamp-2 mb-3">
+            <p className="text-sm text-fg-tertiary line-clamp-2 mb-3">
               {repo.description}
             </p>
           )}
 
-          <div className="flex items-center gap-4 text-xs text-gray-400">
+          <div className="flex items-center gap-4 text-xs text-fg-tertiary">
             <span className="flex items-center gap-1">
               <GitBranch className="h-3 w-3" />
               {repo.defaultBranch}
@@ -45,8 +45,8 @@ export function RepoCard({ repo }: RepoCardProps) {
           </div>
         </div>
 
-        <div className="flex-shrink-0 text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
-          Open →
+        <div className="flex-shrink-0 text-[12px] font-medium text-fg-tertiary bg-surface-tertiary px-2.5 py-1 rounded-md">
+          Open
         </div>
       </div>
     </Link>

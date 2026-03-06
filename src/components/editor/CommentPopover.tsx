@@ -106,7 +106,7 @@ export function CommentPopover({
       >
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-gray-200 rounded-lg shadow-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 bg-surface border border-border rounded-lg shadow-lg text-sm font-medium text-fg-secondary hover:bg-surface-hover transition-colors"
         >
           <MessageSquare className="h-3.5 w-3.5" />
           Comment
@@ -118,10 +118,10 @@ export function CommentPopover({
   return (
     <div
       style={{ position: "fixed", top: position.top, left: position.left }}
-      className="z-30 w-80 bg-white border border-gray-200 rounded-xl shadow-xl"
+      className="z-30 w-80 bg-surface border border-border rounded-xl shadow-xl"
     >
-      <div className="p-3 border-b border-gray-100">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+      <div className="p-3 border-b border-border-secondary">
+        <span className="text-xs font-semibold text-fg-tertiary uppercase tracking-wide">
           Add comment
         </span>
       </div>
@@ -133,10 +133,10 @@ export function CommentPopover({
           onKeyDown={handleKeyDown}
           placeholder="Leave a comment on this passage..."
           rows={3}
-          className="w-full text-sm px-2.5 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full text-sm px-2.5 py-2 border border-border rounded-lg bg-surface resize-none focus:outline-none focus:ring-2 focus:ring-fg/20"
         />
         <div className="flex items-center justify-between mt-2">
-          <span className="text-xs text-gray-400">⌘↵ to submit</span>
+          <span className="text-xs text-fg-tertiary">⌘↵ to submit</span>
           <div className="flex gap-2">
             <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
               Cancel

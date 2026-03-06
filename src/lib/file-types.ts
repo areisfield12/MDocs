@@ -43,20 +43,6 @@ export function getFileCategory(path: string): FileCategory {
   return "doc";
 }
 
-export function getFileIcon(category: FileCategory): string {
-  switch (category) {
-    case "agent":
-      return "🤖";
-    case "style":
-      return "🎨";
-    case "gtm":
-      return "📋";
-    case "doc":
-    default:
-      return "📄";
-  }
-}
-
 export function getFileCategoryLabel(category: FileCategory): string {
   switch (category) {
     case "agent":

@@ -9,14 +9,14 @@ interface MarkdownToggleProps {
 
 export function MarkdownToggle({ mode, onToggle }: MarkdownToggleProps) {
   return (
-    <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+    <div className="flex items-center bg-surface-tertiary rounded-lg p-0.5">
       <button
         onClick={() => onToggle("wysiwyg")}
         className={cn(
           "px-3 py-1 text-xs font-medium rounded-md transition-colors",
           mode === "wysiwyg"
-            ? "bg-white text-gray-900 shadow-sm"
-            : "text-gray-500 hover:text-gray-700"
+            ? "bg-surface text-fg shadow-sm"
+            : "text-fg-tertiary hover:text-fg-secondary"
         )}
       >
         Visual
@@ -26,8 +26,8 @@ export function MarkdownToggle({ mode, onToggle }: MarkdownToggleProps) {
         className={cn(
           "px-3 py-1 text-xs font-medium rounded-md transition-colors",
           mode === "raw"
-            ? "bg-white text-gray-900 shadow-sm"
-            : "text-gray-500 hover:text-gray-700"
+            ? "bg-surface text-fg shadow-sm"
+            : "text-fg-tertiary hover:text-fg-secondary"
         )}
       >
         Markdown

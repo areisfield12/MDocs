@@ -219,24 +219,24 @@ export function EditorPageClient({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white">
-        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-        <span className="ml-2 text-gray-500">Loading file...</span>
+      <div className="flex items-center justify-center h-screen bg-surface">
+        <Loader2 className="h-6 w-6 animate-spin text-fg-tertiary" />
+        <span className="ml-2 text-fg-tertiary">Loading file...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-white gap-4">
+      <div className="flex flex-col items-center justify-center h-screen bg-surface gap-4">
         <AlertCircle className="h-10 w-10 text-red-400" />
         <div className="text-center">
-          <p className="font-semibold text-gray-900">Unable to load file</p>
-          <p className="text-gray-500 text-sm mt-1">{error}</p>
+          <p className="font-semibold text-fg">Unable to load file</p>
+          <p className="text-fg-tertiary text-sm mt-1">{error}</p>
         </div>
         <button
           onClick={reload}
-          className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700"
+          className="px-4 py-2 bg-fg text-fg-inverted rounded-lg text-sm font-medium hover:bg-fg/90"
         >
           Try again
         </button>
@@ -258,9 +258,9 @@ export function EditorPageClient({
       onSave={requirePR ? undefined : handleSave}
       onProposeChanges={handleProposeChanges}
     >
-      <div className="h-full flex flex-col bg-white">
+      <div className="h-full flex flex-col bg-surface">
         {/* Toolbar row */}
-        <div className="flex items-center border-b border-gray-200">
+        <div className="flex items-center border-b border-border">
           <div className="flex-1">
             {mode === "wysiwyg" && (
               <Toolbar
@@ -270,7 +270,7 @@ export function EditorPageClient({
               />
             )}
           </div>
-          <div className="px-4 py-2 border-l border-gray-200 flex-shrink-0">
+          <div className="px-4 py-2 border-l border-border flex-shrink-0">
             <MarkdownToggle mode={mode} onToggle={handleModeToggle} />
           </div>
         </div>
@@ -305,7 +305,7 @@ export function EditorPageClient({
                   setRawDraft(e.target.value);
                   editorState.markUnsaved();
                 }}
-                className="w-full h-full resize-none font-mono text-sm px-16 py-12 focus:outline-none bg-white"
+                className="w-full h-full resize-none font-mono text-sm px-16 py-12 focus:outline-none bg-surface text-fg"
                 placeholder="Write markdown here..."
                 spellCheck={false}
               />
@@ -328,7 +328,7 @@ export function EditorPageClient({
 
           {/* Comment sidebar */}
           {showCommentPanel && (
-            <div className="w-80 border-l border-gray-200 flex-shrink-0">
+            <div className="w-80 border-l border-border flex-shrink-0">
               <CommentThread
                 comments={commentList}
                 onResolve={resolveComment}
@@ -526,7 +526,7 @@ function EditorWithRef({
     onDestroy: () => onEditorReady(null),
     editorProps: {
       attributes: {
-        class: "prose prose-gray max-w-none focus:outline-none min-h-full px-16 py-12",
+        class: "prose prose-gray dark:prose-invert max-w-none focus:outline-none min-h-full px-16 py-12",
       },
     },
   });
