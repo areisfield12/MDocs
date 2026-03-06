@@ -55,9 +55,9 @@ function ToolbarButton({
             className={cn(
               "p-1.5 rounded transition-colors",
               active
-                ? "bg-gray-800 text-white"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-              disabled && "opacity-40 pointer-events-none"
+                ? "bg-fg text-fg-inverted"
+                : "text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary",
+              disabled && "opacity-30 pointer-events-none"
             )}
           >
             {children}
@@ -65,11 +65,11 @@ function ToolbarButton({
         </Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Content
-            className="bg-gray-900 text-white text-xs px-2 py-1 rounded shadow z-50"
+            className="bg-fg text-fg-inverted text-xs px-2 py-1 rounded shadow z-50"
             sideOffset={6}
           >
             {label}
-            <Tooltip.Arrow className="fill-gray-900" />
+            <Tooltip.Arrow className="fill-fg" />
           </Tooltip.Content>
         </Tooltip.Portal>
       </Tooltip.Root>
@@ -78,7 +78,7 @@ function ToolbarButton({
 }
 
 function Divider() {
-  return <div className="w-px h-5 bg-gray-200 mx-1" />;
+  return <div className="w-px h-5 bg-border mx-1" />;
 }
 
 export function Toolbar({ editor, onAIEdit, hasSelection }: ToolbarProps) {
@@ -100,7 +100,7 @@ export function Toolbar({ editor, onAIEdit, hasSelection }: ToolbarProps) {
   };
 
   return (
-    <div className="flex items-center gap-0.5 px-3 py-2 border-b border-gray-200 bg-white flex-wrap">
+    <div className="flex items-center gap-0.5 px-3 py-1.5 border-b border-border-secondary bg-surface flex-wrap">
       {/* History */}
       <ToolbarButton
         onClick={() => editor.chain().focus().undo().run()}
@@ -222,10 +222,10 @@ export function Toolbar({ editor, onAIEdit, hasSelection }: ToolbarProps) {
               onAIEdit();
             }}
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-colors",
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[12px] font-medium transition-colors",
               hasSelection
-                ? "bg-violet-600 text-white hover:bg-violet-700"
-                : "text-gray-400 bg-gray-100 hover:bg-gray-200 hover:text-gray-600"
+                ? "bg-fg text-fg-inverted hover:bg-fg/90"
+                : "text-fg-tertiary bg-surface-tertiary hover:bg-surface-hover hover:text-fg-secondary"
             )}
           >
             <Sparkles className="h-3.5 w-3.5" />

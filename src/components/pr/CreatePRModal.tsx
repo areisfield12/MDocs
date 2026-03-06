@@ -133,21 +133,21 @@ export function CreatePRModal({
       <div className="space-y-4">
         {/* Title */}
         <div>
-          <label className="text-sm font-medium text-gray-700 block mb-1">
+          <label className="text-sm font-medium text-fg-secondary block mb-1">
             Pull request title
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-border rounded-md text-[13px] bg-surface focus:outline-none focus:ring-2 focus:ring-fg/10 focus:border-fg-tertiary"
           />
         </div>
 
         {/* Description */}
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="text-sm font-medium text-gray-700">
+            <label className="text-sm font-medium text-fg-secondary">
               Description
             </label>
             {generatingDesc && (
@@ -163,17 +163,17 @@ export function CreatePRModal({
             onChange={(e) => setBody(e.target.value)}
             placeholder="Describe what changed and why..."
             rows={6}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-200 rounded-md text-[13px] resize-none focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300"
           />
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-fg-tertiary mt-1">
             This is pre-filled by AI based on your changes — edit as needed
           </p>
         </div>
 
         {/* Target branch info */}
-        <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600">
+        <div className="flex items-center gap-2 px-3 py-2 bg-surface-secondary border border-border rounded-lg text-sm text-fg-secondary">
           <span>Merging into</span>
-          <code className="font-mono text-xs bg-white border border-gray-200 px-1.5 py-0.5 rounded">
+          <code className="font-mono text-xs bg-surface border border-border px-1.5 py-0.5 rounded">
             {baseBranch}
           </code>
         </div>
@@ -181,7 +181,7 @@ export function CreatePRModal({
         {/* Reviewer suggestions */}
         {collaborators.length > 0 && (
           <div>
-            <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-2">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-fg-secondary mb-2">
               <UserPlus className="h-4 w-4" />
               Request reviewers (optional)
             </div>
@@ -190,10 +190,10 @@ export function CreatePRModal({
                 <button
                   key={c.login}
                   onClick={() => toggleReviewer(c.login)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[12px] font-medium border transition-colors ${
                     reviewers.includes(c.login)
-                      ? "bg-blue-50 border-blue-300 text-blue-700"
-                      : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                      ? "bg-surface-tertiary border-border text-fg"
+                      : "bg-surface border-border text-fg-tertiary hover:border-fg-tertiary"
                   }`}
                 >
                   @{c.login}
@@ -205,7 +205,7 @@ export function CreatePRModal({
         )}
 
         {/* Actions */}
-        <div className="flex gap-2 pt-2 border-t border-gray-100">
+        <div className="flex gap-2 pt-2 border-t border-border-secondary">
           <Button
             onClick={handleSubmit}
             loading={submitting}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, ChevronDown, Star } from "lucide-react";
+import { ChevronRight, ChevronDown, Star, Folder, FileText } from "lucide-react";
 import { FileNode } from "@/types";
 import { FileIcon } from "./FileIcon";
 import { formatRelativeTime } from "@/lib/utils";
@@ -94,9 +94,9 @@ export function FileTree({
 
   if (files.length === 0) {
     return (
-      <div className="text-center py-16 text-gray-400">
-        <p className="text-4xl mb-3">📄</p>
-        <p className="font-medium">No markdown files found</p>
+      <div className="text-center py-16 text-fg-tertiary">
+        <FileText className="h-10 w-10 mx-auto mb-3" />
+        <p className="font-medium text-fg-secondary">No markdown files found</p>
         <p className="text-sm mt-1">
           This repository doesn&apos;t contain any .md or .mdx files
         </p>
@@ -105,7 +105,7 @@ export function FileTree({
   }
 
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-border-secondary">
       <TreeNodes
         nodes={tree}
         owner={owner}
@@ -147,16 +147,17 @@ function TreeNodes({
             <>
               <button
                 onClick={() => onToggleDir(node.path)}
-                className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left"
+                className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-surface-hover transition-colors text-left"
                 style={{ paddingLeft: `${16 + depth * 20}px` }}
               >
                 {expandedDirs.has(node.path) ? (
-                  <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <ChevronDown className="h-4 w-4 text-fg-tertiary flex-shrink-0" />
                 ) : (
-                  <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-fg-tertiary flex-shrink-0" />
                 )}
-                <span className="text-sm font-medium text-gray-700">
-                  📁 {node.name}
+                <Folder className="h-4 w-4 text-fg-tertiary flex-shrink-0" />
+                <span className="text-sm font-medium text-fg-secondary">
+                  {node.name}
                 </span>
               </button>
               {expandedDirs.has(node.path) && (
@@ -174,7 +175,7 @@ function TreeNodes({
             </>
           ) : (
             <div
-              className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors group"
+              className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition-colors group"
               style={{ paddingLeft: `${16 + depth * 20}px` }}
             >
               <FileIcon path={node.path} />
@@ -182,11 +183,11 @@ function TreeNodes({
                 href={`/repos/${owner}/${repo}/edit/${node.path}`}
                 className="flex-1 min-w-0 flex items-center justify-between gap-4"
               >
-                <span className="text-sm text-gray-800 truncate font-medium">
+                <span className="text-sm text-fg truncate font-medium">
                   {node.name}
                 </span>
                 {node.file?.lastCommit && (
-                  <span className="text-xs text-gray-400 flex-shrink-0">
+                  <span className="text-xs text-fg-tertiary flex-shrink-0">
                     {formatRelativeTime(node.file.lastCommit.date)}
                   </span>
                 )}
@@ -197,7 +198,7 @@ function TreeNodes({
                   onToggleStar(node.path);
                 }}
                 className={cn(
-                  "opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-100",
+                  "opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-surface-hover",
                   starredPaths.includes(node.path) && "opacity-100"
                 )}
                 aria-label={
@@ -209,7 +210,7 @@ function TreeNodes({
                     "h-3.5 w-3.5 transition-colors",
                     starredPaths.includes(node.path)
                       ? "fill-amber-400 text-amber-400"
-                      : "text-gray-400"
+                      : "text-fg-tertiary"
                   )}
                 />
               </button>

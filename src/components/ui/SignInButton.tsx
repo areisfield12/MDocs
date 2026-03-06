@@ -12,8 +12,8 @@ export function SignInButton({ size = "default" }: SignInButtonProps) {
     <button
       onClick={() => signIn("github")}
       className={cn(
-        "inline-flex items-center gap-2 font-semibold rounded-lg bg-white text-gray-900 hover:bg-gray-100 transition-colors",
-        size === "lg" ? "px-6 py-3 text-base" : "px-4 py-2 text-sm"
+        "inline-flex items-center gap-2 font-medium rounded-md bg-white text-gray-900 hover:bg-gray-100 transition-colors",
+        size === "lg" ? "px-5 py-2.5 text-[14px]" : "px-3.5 py-2 text-[13px]"
       )}
     >
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

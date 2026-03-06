@@ -40,10 +40,10 @@ export function FrontmatterEditor({ data, onChange }: FrontmatterEditorProps) {
   const entries = Object.entries(data);
 
   return (
-    <div className="border-b border-gray-200 bg-gray-50">
+    <div className="border-b border-border bg-surface-secondary">
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center gap-2 w-full px-6 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide hover:bg-gray-100 transition-colors"
+        className="flex items-center gap-2 w-full px-6 py-2.5 text-xs font-semibold text-fg-tertiary uppercase tracking-wide hover:bg-surface-hover transition-colors"
       >
         {collapsed ? (
           <ChevronRight className="h-3 w-3" />
@@ -51,7 +51,7 @@ export function FrontmatterEditor({ data, onChange }: FrontmatterEditorProps) {
           <ChevronDown className="h-3 w-3" />
         )}
         Frontmatter
-        <span className="font-normal normal-case text-gray-400">
+        <span className="font-normal normal-case text-fg-tertiary">
           ({entries.length} field{entries.length !== 1 ? "s" : ""})
         </span>
       </button>
@@ -65,23 +65,23 @@ export function FrontmatterEditor({ data, onChange }: FrontmatterEditorProps) {
                 defaultValue={key}
                 onBlur={(e) => handleKeyRename(key, e.target.value)}
                 className={cn(
-                  "w-32 text-xs font-mono px-2 py-1.5 border border-gray-200 rounded bg-white",
-                  "focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-600"
+                  "w-32 text-xs font-mono px-2 py-1.5 border border-border rounded bg-surface",
+                  "focus:outline-none focus:ring-1 focus:ring-fg/20 text-fg-secondary"
                 )}
               />
-              <span className="text-gray-400 text-xs">:</span>
+              <span className="text-fg-tertiary text-xs">:</span>
               <input
                 type="text"
                 value={String(value ?? "")}
                 onChange={(e) => handleValueChange(key, e.target.value)}
                 className={cn(
-                  "flex-1 text-xs px-2 py-1.5 border border-gray-200 rounded bg-white",
-                  "focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  "flex-1 text-xs px-2 py-1.5 border border-border rounded bg-surface",
+                  "focus:outline-none focus:ring-1 focus:ring-fg/20"
                 )}
               />
               <button
                 onClick={() => handleRemoveField(key)}
-                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                className="p-1 text-fg-tertiary hover:text-red-500 transition-colors"
                 aria-label="Remove field"
               >
                 <X className="h-3.5 w-3.5" />
@@ -91,7 +91,7 @@ export function FrontmatterEditor({ data, onChange }: FrontmatterEditorProps) {
 
           <button
             onClick={handleAddField}
-            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 transition-colors mt-1"
+            className="flex items-center gap-1 text-xs text-violet-500 hover:text-violet-400 transition-colors mt-1"
           >
             <Plus className="h-3.5 w-3.5" />
             Add field

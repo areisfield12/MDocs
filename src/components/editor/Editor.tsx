@@ -80,7 +80,7 @@ export function Editor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-gray max-w-none focus:outline-none min-h-full px-16 py-12",
+          "prose prose-gray dark:prose-invert max-w-none focus:outline-none min-h-full px-16 py-12",
       },
     },
   });

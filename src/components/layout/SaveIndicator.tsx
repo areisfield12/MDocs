@@ -28,11 +28,11 @@ export function SaveIndicator({
       <div
         className={cn(
           "flex items-center gap-1.5 text-sm px-3 py-1 rounded-full",
-          status === "unsaved" && "bg-amber-50 text-amber-700",
-          status === "saving" && "bg-gray-100 text-gray-600",
-          status === "saved" && "bg-green-50 text-green-700",
-          status === "error" && "bg-red-50 text-red-700",
-          status === "pr-open" && "bg-violet-50 text-violet-700"
+          status === "unsaved" && "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+          status === "saving" && "bg-surface-tertiary text-fg-secondary",
+          status === "saved" && "bg-green-500/10 text-green-600 dark:text-green-400",
+          status === "error" && "bg-red-500/10 text-red-600 dark:text-red-400",
+          status === "pr-open" && "bg-violet-500/10 text-violet-600 dark:text-violet-400"
         )}
       >
         {status === "unsaved" && (
