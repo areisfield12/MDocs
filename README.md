@@ -1,8 +1,6 @@
-# MDocs
+# MDocs: a GitHub-integrated, Notion-style markdown editor
 
-## The Google Docs experience for GitHub markdown
-
-Collaborative markdown editor for GitHub — Google Docs experience for teams managing agent configs, style guides, and playbooks in repos.
+Collaborative markdown editor for GitHub. Google Docs experience for teams managing agent configs, style guides, and playbooks in repos.
 
 * * *
 
