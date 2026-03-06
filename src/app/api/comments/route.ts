@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 // GET /api/comments?repoOwner=&repoName=&filePath=&commitSha=
@@ -52,6 +53,7 @@ const CreateCommentSchema = z.object({
   commitSha: z.string(),
   charStart: z.number().int().min(0),
   charEnd: z.number().int().min(0),
+  quotedText: z.string().max(10000).optional(),
   body: z.string().min(1).max(5000),
 });
 
@@ -77,18 +79,32 @@ export async function POST(request: NextRequest) {
     }, { status: 400 });
   }
 
-  const comment = await prisma.comment.create({
-    data: {
-      ...parsed.data,
-      authorId: session.user.id,
-    },
-    include: {
-      author: {
-        select: { id: true, name: true, image: true, githubLogin: true },
+  try {
+    const comment = await prisma.comment.create({
+      data: {
+        ...parsed.data,
+        authorId: session.user.id,
       },
-      replies: true,
-    },
-  });
+      include: {
+        author: {
+          select: { id: true, name: true, image: true, githubLogin: true },
+        },
+        replies: true,
+      },
+    });
 
-  return NextResponse.json({ comment }, { status: 201 });
+    return NextResponse.json({ comment }, { status: 201 });
+  } catch (error) {
+    console.error("Failed to create comment:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+      return NextResponse.json(
+        { error: "Account not found", actionable: "Please sign out and sign back in." },
+        { status: 401 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Failed to create comment", actionable: "Please try again." },
+      { status: 500 }
+    );
+  }
 }

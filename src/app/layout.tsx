@@ -31,16 +31,17 @@ export default async function RootLayout({
             toastOptions={{
               duration: 4000,
               style: {
-                background: "#1f2937",
-                color: "#f9fafb",
+                background: "var(--bg-tertiary)",
+                color: "var(--text-primary)",
                 borderRadius: "0.5rem",
                 fontSize: "0.875rem",
+                border: "1px solid var(--border-color)",
               },
               success: {
-                iconTheme: { primary: "#10b981", secondary: "#f9fafb" },
+                iconTheme: { primary: "#10b981", secondary: "var(--text-primary)" },
               },
               error: {
-                iconTheme: { primary: "#ef4444", secondary: "#f9fafb" },
+                iconTheme: { primary: "#ef4444", secondary: "var(--text-primary)" },
                 duration: 6000,
               },
             }}

@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Star, Settings, ChevronRight, ChevronDown, Loader2 } from "lucide-react";
+import { Home, Star, Settings, ChevronRight, ChevronDown, Loader2, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getFileIcon, getFileCategory } from "@/lib/file-types";
+import { FileIcon } from "@/components/repo/FileIcon";
 import { FileNode } from "@/types";
 import { MDocsLogo } from "@/components/ui/MDocsLogo";
 
@@ -46,25 +46,26 @@ export function Sidebar({
   ];
 
   return (
-    <aside className="h-full bg-gray-50 border-r border-gray-200 flex flex-col">
+    <aside className="h-full bg-surface-secondary border-r border-border-secondary flex flex-col">
       {/* Logo */}
-      <div className="px-4 py-4 border-b border-gray-200">
-        <Link href="/dashboard" className="flex items-center gap-2 font-bold text-gray-900">
-          <MDocsLogo size={22} variant="light" />
+      <div className="px-4 h-14 flex items-center border-b border-border-secondary">
+        <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-fg">
+          <FileText className="h-[18px] w-[18px] text-fg-tertiary" />
+          <span className="text-[14px] tracking-[-0.01em]">MDocs</span>
         </Link>
       </div>
 
       {/* Nav links */}
-      <nav className="px-2 py-3 space-y-0.5 border-b border-gray-200">
+      <nav className="px-2 py-2 space-y-px">
         {navItems.map(({ href, icon: Icon, label }) => (
           <Link
             key={href}
             href={href}
             className={cn(
-              "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors",
+              "flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] transition-colors",
               pathname === href || pathname.startsWith(href + "/")
-                ? "bg-blue-50 text-blue-700 font-medium"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                ? "bg-surface-active text-fg font-medium"
+                : "text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary"
             )}
           >
             <Icon className="h-4 w-4" />
@@ -76,10 +77,10 @@ export function Sidebar({
       {/* File tree for current repo */}
       {currentRepoOwner && currentRepoName && (
         <div className="flex-1 overflow-y-auto">
-          <div className="px-3 py-2.5 border-b border-gray-200">
+          <div className="px-3 py-2 border-y border-border-secondary">
             <Link
               href={`/repos/${currentRepoOwner}/${currentRepoName}`}
-              className="text-xs font-semibold text-gray-500 hover:text-gray-900 uppercase tracking-wide"
+              className="text-[11px] font-medium text-fg-tertiary hover:text-fg-secondary uppercase tracking-wider"
             >
               {currentRepoOwner}/{currentRepoName}
             </Link>
@@ -87,7 +88,7 @@ export function Sidebar({
 
           {fileTreeLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+              <Loader2 className="h-4 w-4 animate-spin text-fg-tertiary" />
             </div>
           ) : (
             <FileTreeNodes
@@ -138,7 +139,7 @@ function FileTreeNodes({
             <>
               <button
                 onClick={() => onToggleDir(node.path)}
-                className="w-full flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary transition-colors"
                 style={{ paddingLeft: `${12 + depth * 12}px` }}
               >
                 {expandedDirs.has(node.path) ? (
@@ -148,22 +149,19 @@ function FileTreeNodes({
                 )}
                 <span className="truncate">{node.name}</span>
               </button>
-              {/* Children would be fetched lazily — for now show if expanded */}
             </>
           ) : (
             <Link
               href={`/repos/${owner}/${repo}/edit/${node.path}`}
               className={cn(
-                "flex items-center gap-2 py-1.5 text-sm transition-colors truncate",
+                "flex items-center gap-2 py-1.5 text-[13px] transition-colors truncate",
                 currentPath === node.path
-                  ? "bg-blue-50 text-blue-700 font-medium"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  ? "bg-surface-active text-fg font-medium"
+                  : "text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary"
               )}
               style={{ paddingLeft: `${20 + depth * 12}px`, paddingRight: "12px" }}
             >
-              <span className="flex-shrink-0 text-xs">
-                {getFileIcon(getFileCategory(node.path))}
-              </span>
+              <FileIcon path={node.path} className="h-3.5 w-3.5" />
               <span className="truncate">{node.name}</span>
             </Link>
           )}

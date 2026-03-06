@@ -49,16 +49,15 @@ export function RepoSettingsClient({
     <div className="h-full overflow-y-auto">
       <div className="max-w-2xl mx-auto px-6 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Repository Settings</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-lg font-semibold text-fg tracking-[-0.01em]">Repository Settings</h1>
+          <p className="text-[13px] text-fg-tertiary mt-1">
             {owner}/{repo}
           </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-6">
-          {/* Default branch */}
+        <div className="bg-surface border border-border rounded-lg p-6 space-y-6">
           <div>
-            <label className="text-sm font-medium text-gray-700 block mb-1">
+            <label className="text-sm font-medium text-fg-secondary block mb-1">
               Default branch
             </label>
             <input
@@ -67,14 +66,13 @@ export function RepoSettingsClient({
               onChange={(e) =>
                 setSettings((s) => ({ ...s, defaultBranch: e.target.value }))
               }
-              className="w-full max-w-xs px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full max-w-xs px-3 py-2 border border-border rounded-md text-[13px] bg-surface text-fg focus:outline-none focus:ring-2 focus:ring-fg/10 focus:border-fg/20"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-fg-tertiary mt-1">
               Changes are saved directly to this branch by default
             </p>
           </div>
 
-          {/* Require PR */}
           <div className="flex items-start gap-3">
             <input
               type="checkbox"
@@ -83,23 +81,23 @@ export function RepoSettingsClient({
               onChange={(e) =>
                 setSettings((s) => ({ ...s, requirePR: e.target.checked }))
               }
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="mt-0.5 h-4 w-4 rounded border-border accent-fg"
             />
             <div>
               <label
                 htmlFor="requirePR"
-                className="text-sm font-medium text-gray-700 cursor-pointer"
+                className="text-sm font-medium text-fg-secondary cursor-pointer"
               >
                 Require pull request for all changes
               </label>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-fg-tertiary mt-0.5">
                 When enabled, all edits must go through a pull request — direct
                 commits are disabled for this repository.
               </p>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-gray-100">
+          <div className="pt-4 border-t border-border-secondary">
             <Button onClick={handleSave} loading={saving}>
               Save settings
             </Button>

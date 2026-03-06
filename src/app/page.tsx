@@ -3,6 +3,14 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { SignInButton } from "@/components/ui/SignInButton";
 import { MDocsLogo, MDocsMark } from "@/components/ui/MDocsLogo";
+import {
+  FileText,
+  GitPullRequest,
+  Sparkles,
+  MessageSquare,
+  Shield,
+  FolderOpen,
+} from "lucide-react";
 
 export default async function LandingPage() {
   const session = await getServerSession(authOptions);
@@ -10,6 +18,39 @@ export default async function LandingPage() {
   if (session) {
     redirect("/dashboard");
   }
+
+  const features = [
+    {
+      icon: FileText,
+      title: "WYSIWYG Editor",
+      desc: "Rich editing with a markdown source toggle",
+    },
+    {
+      icon: GitPullRequest,
+      title: "PR Workflows",
+      desc: "Propose changes as pull requests without knowing git",
+    },
+    {
+      icon: Sparkles,
+      title: "AI Authoring",
+      desc: "Ask Claude to rewrite, expand, or improve any selection",
+    },
+    {
+      icon: MessageSquare,
+      title: "Inline Comments",
+      desc: "Select text and leave threaded comments for teammates",
+    },
+    {
+      icon: Shield,
+      title: "GitHub Auth",
+      desc: "Your GitHub permissions — exactly what you can access",
+    },
+    {
+      icon: FolderOpen,
+      title: "File Browser",
+      desc: "Navigate all markdown files across your org's repos",
+    },
+  ];
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col">
@@ -39,55 +80,31 @@ export default async function LandingPage() {
           easy to edit and collaborate on as a Google Doc.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="flex flex-col sm:flex-row gap-4 items-center mt-2">
           <SignInButton size="lg" />
-          <p className="text-sm text-gray-600">
+          <p className="text-[13px] text-gray-600">
             No password required · GitHub identity only
           </p>
         </div>
 
         {/* Feature grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full mt-12">
-          {[
-            {
-              title: "Just Write",
-              desc: "A rich-text editor you already know how to use — no markdown syntax needed",
-            },
-            {
-              title: "Suggest Changes",
-              desc: "Propose edits as pull requests without ever opening a terminal",
-            },
-            {
-              title: "AI Assist",
-              desc: "Ask Claude to draft, rewrite, or improve any section for you",
-            },
-            {
-              title: "Comment Together",
-              desc: "Select text and leave threaded comments — just like Google Docs",
-            },
-            {
-              title: "Files Stay in GitHub",
-              desc: "Engineers and agents find your docs exactly where they expect them",
-            },
-            {
-              title: "Browse Everything",
-              desc: "See every markdown file across your org — no cloning required",
-            },
-          ].map((feature) => (
+          {features.map((feature) => (
             <div
               key={feature.title}
-              className="bg-white/[0.02] border border-white/5 rounded-xl p-5 text-left hover:border-white/10 transition-colors"
+              className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-5 py-4 text-left hover:bg-white/[0.04] transition-colors"
             >
-              <div className="font-semibold text-white mb-1">{feature.title}</div>
-              <div className="text-sm text-gray-500">{feature.desc}</div>
+              <feature.icon className="h-4 w-4 text-gray-500 mb-3" />
+              <div className="text-[13px] font-medium text-gray-200 mb-1">{feature.title}</div>
+              <div className="text-[13px] text-gray-500 leading-relaxed">{feature.desc}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="text-center text-xs text-gray-700 py-6 border-t border-white/5">
-        Your files never leave GitHub · MDocs is just a better way to edit them
+      <footer className="text-center text-[12px] text-gray-600 py-6 border-t border-white/[0.06]">
+        Files always live in GitHub · MDocs is a lens, not a storage layer
       </footer>
     </main>
   );

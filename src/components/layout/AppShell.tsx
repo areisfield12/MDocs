@@ -33,7 +33,7 @@ export function AppShell({
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen bg-surface overflow-hidden">
       {/* Sidebar */}
       <div
         className={cn(
