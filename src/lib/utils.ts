@@ -1,0 +1,104 @@
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { ApiError } from "@/types";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+/**
+ * Format a GitHub API error into a user-friendly message.
+ */
+export function formatGitHubError(error: unknown): ApiError {
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+
+    if (msg.includes("rate limit")) {
+      return {
+        error: "GitHub API rate limit reached",
+        actionable: "You've hit GitHub's rate limit. Wait a minute and try again.",
+      };
+    }
+    if (msg.includes("not found") || msg.includes("404")) {
+      return {
+        error: "File or repository not found",
+        actionable:
+          "The file or repository may have been deleted or you may not have access.",
+      };
+    }
+    if (msg.includes("conflict") || msg.includes("422")) {
+      return {
+        error: "Conflict detected",
+        actionable:
+          "Someone else may have edited this file. Refresh to get the latest version.",
+      };
+    }
+    if (msg.includes("401") || msg.includes("unauthorized")) {
+      return {
+        error: "GitHub access expired",
+        actionable: "Sign out and sign back in to refresh your GitHub access.",
+      };
+    }
+    if (msg.includes("mdocs is not installed")) {
+      return {
+        error: "MDocs app not installed",
+        actionable:
+          "Install the MDocs GitHub App on this repository or organization to continue.",
+      };
+    }
+  }
+
+  return {
+    error: "Something went wrong",
+    actionable: "An unexpected error occurred. Please try again.",
+  };
+}
+
+/**
+ * Decode base64-encoded GitHub file content.
+ */
+export function decodeBase64(encoded: string): string {
+  return Buffer.from(encoded, "base64").toString("utf-8");
+}
+
+/**
+ * Encode a string to base64 for GitHub API.
+ */
+export function encodeBase64(content: string): string {
+  return Buffer.from(content, "utf-8").toString("base64");
+}
+
+/**
+ * Generate a branch name for MDocs PRs.
+ * Format: mdocs/username/filename-timestamp
+ */
+export function generateBranchName(githubLogin: string, filePath: string): string {
+  const filename = filePath.split("/").pop()?.replace(/\.[^.]+$/, "") ?? "file";
+  const sanitized = filename.toLowerCase().replace(/[^a-z0-9-]/g, "-");
+  const timestamp = Date.now();
+  return `mdocs/${githubLogin}/${sanitized}-${timestamp}`;
+}
+
+/**
+ * Format a commit timestamp as a relative time string (e.g., "3 days ago").
+ */
+export function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSecs < 60) return "just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+  });
+}
