@@ -7,6 +7,7 @@ import { Home, Star, Settings, ChevronRight, ChevronDown, Loader2 } from "lucide
 import { cn } from "@/lib/utils";
 import { getFileIcon, getFileCategory } from "@/lib/file-types";
 import { FileNode } from "@/types";
+import { MDocsLogo } from "@/components/ui/MDocsLogo";
 
 interface SidebarProps {
   currentRepoOwner?: string;
@@ -49,8 +50,7 @@ export function Sidebar({
       {/* Logo */}
       <div className="px-4 py-4 border-b border-gray-200">
         <Link href="/dashboard" className="flex items-center gap-2 font-bold text-gray-900">
-          <span className="text-xl">📝</span>
-          <span>MDocs</span>
+          <MDocsLogo size={22} variant="light" />
         </Link>
       </div>
 
