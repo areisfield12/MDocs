@@ -64,6 +64,7 @@ export interface CommentWithAuthor {
   commitSha: string;
   charStart: number;
   charEnd: number;
+  quotedText?: string | null;
   body: string;
   resolved: boolean;
   createdAt: string;
