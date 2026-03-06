@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { SignInButton } from "@/components/ui/SignInButton";
+import { MDocsLogo, MDocsMark } from "@/components/ui/MDocsLogo";
 import {
   FileText,
   GitPullRequest,
@@ -52,33 +53,31 @@ export default async function LandingPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#0A0A0B] text-white flex flex-col antialiased">
+    <main className="min-h-screen bg-[#0a0a0a] text-white flex flex-col">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-8 py-4 border-b border-white/[0.06]">
-        <div className="flex items-center gap-2.5">
-          <FileText className="h-5 w-5 text-gray-400" />
-          <span className="text-[15px] font-semibold tracking-tight text-gray-100">MDocs</span>
-        </div>
+      <nav className="flex items-center justify-between px-8 py-5 border-b border-white/5">
+        <MDocsLogo size={28} />
         <SignInButton />
       </nav>
 
       {/* Hero */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-6 max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 bg-white/[0.04] border border-white/[0.06] text-gray-400 text-[13px] px-3.5 py-1.5 rounded-full">
-          <span>Built for teams using Claude Code, Cursor, and Copilot</span>
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-8 max-w-3xl mx-auto">
+        <MDocsLogo size={48} className="mb-2" />
+
+        <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 text-gray-400 text-sm px-4 py-1.5 rounded-full">
+          Fully GitHub integrated
         </div>
 
-        <h1 className="text-[40px] md:text-5xl font-semibold tracking-[-0.025em] leading-[1.15] text-gray-50">
-          Collaborate on docs{" "}
-          <span className="text-gray-400">
-            that live in GitHub
+        <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight leading-tight">
+          GitHub files.{" "}
+          <span className="bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
+            Docs experience.
           </span>
         </h1>
 
-        <p className="text-[15px] md:text-base text-gray-500 max-w-xl leading-relaxed">
-          A Google Docs-style editor for CLAUDE.md configs, brand style guides,
-          sales playbooks, and AI persona files — with PR workflows, inline
-          comments, and AI-assisted editing.
+        <p className="text-lg md:text-xl text-gray-500 max-w-2xl leading-relaxed">
+          Your agents&apos; brains live in markdown files. MDocs makes them as
+          easy to edit and collaborate on as a Google Doc.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 items-center mt-2">

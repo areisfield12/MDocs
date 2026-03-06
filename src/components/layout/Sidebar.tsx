@@ -7,6 +7,7 @@ import { Home, Star, Settings, ChevronRight, ChevronDown, Loader2, FileText } fr
 import { cn } from "@/lib/utils";
 import { FileIcon } from "@/components/repo/FileIcon";
 import { FileNode } from "@/types";
+import { MDocsLogo } from "@/components/ui/MDocsLogo";
 
 interface SidebarProps {
   currentRepoOwner?: string;
