@@ -1,37 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, CheckCircle, MessageSquare, Send, Loader2 } from "lucide-react";
+import { X, CheckCircle, MessageSquare, Send } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
-import { useComments } from "@/hooks/useComments";
+import { CommentWithAuthor } from "@/types";
 import { formatRelativeTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 interface CommentThreadProps {
-  owner: string;
-  repo: string;
-  filePath: string;
-  commitSha: string;
-  userId: string;
+  comments: CommentWithAuthor[];
+  onResolve: (commentId: string) => Promise<void>;
+  onReply: (commentId: string, body: string) => Promise<boolean>;
+  onRefresh: () => void;
   onClose: () => void;
   highlightedCommentId?: string | null;
 }
 
 export function CommentThread({
-  owner,
-  repo,
-  filePath,
-  commitSha,
+  comments,
+  onResolve,
+  onReply,
+  onRefresh,
   onClose,
   highlightedCommentId,
 }: CommentThreadProps) {
-  const { comments, loading, resolveComment, addReply, refresh } = useComments({
-    owner,
-    repo,
-    filePath,
-    commitSha,
-  });
 
   const activeComments = comments.filter((c) => !c.resolved);
   const resolvedComments = comments.filter((c) => c.resolved);
@@ -84,10 +77,10 @@ export function CommentThread({
                 key={comment.id}
                 comment={comment}
                 highlighted={comment.id === highlightedCommentId}
-                onResolve={() => resolveComment(comment.id)}
+                onResolve={() => onResolve(comment.id)}
                 onReply={async (body) => {
-                  const ok = await addReply(comment.id, body);
-                  if (ok) refresh();
+                  const ok = await onReply(comment.id, body);
+                  if (ok) onRefresh();
                 }}
               />
             ))}
@@ -104,10 +97,10 @@ export function CommentThread({
                     comment={comment}
                     resolved
                     highlighted={comment.id === highlightedCommentId}
-                    onResolve={() => resolveComment(comment.id)}
+                    onResolve={() => onResolve(comment.id)}
                     onReply={async (body) => {
-                      const ok = await addReply(comment.id, body);
-                      if (ok) refresh();
+                      const ok = await onReply(comment.id, body);
+                      if (ok) onRefresh();
                     }}
                   />
                 ))}

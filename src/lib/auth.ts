@@ -35,6 +35,11 @@ export const authOptions: NextAuthOptions = {
         token.githubLogin = (user as any).githubLogin ?? null;
         token.githubId = (user as any).githubId ?? null;
         token.avatarUrl = (user as any).avatarUrl ?? null;
+      } else if (token.id) {
+        const dbUser = await prisma.user.findUnique({ where: { id: token.id as string } });
+        if (!dbUser) {
+          return { ...token, id: null };
+        }
       }
       return token;
     },

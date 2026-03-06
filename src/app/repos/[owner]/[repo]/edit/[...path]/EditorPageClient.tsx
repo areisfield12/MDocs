@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Editor } from "@/components/editor/Editor";
@@ -16,6 +16,7 @@ import { useEditorState } from "@/hooks/useEditorState";
 import { useComments } from "@/hooks/useComments";
 import { htmlToMarkdown, markdownToHtml } from "@/lib/markdown";
 import { FrontmatterData } from "@/types";
+import { reanchorComments } from "@/lib/commentAnchoring";
 import toast from "react-hot-toast";
 
 // TipTap Editor instance reference type
@@ -72,13 +73,23 @@ export function EditorPageClient({
   }
 
   // Comments — lifted for editor highlights and click-to-open
-  const { comments: commentList, refresh: refreshComments } = useComments({ owner, repo, filePath, commitSha: sha ?? "" });
-  const commentRanges = commentList
-    .filter((c) => !c.resolved)
-    .map((c) => ({ id: c.id, charStart: c.charStart, charEnd: c.charEnd }));
+  const { comments: commentList, refresh: refreshComments, resolveComment, addReply } = useComments({ owner, repo, filePath, commitSha: sha ?? "" });
+  const [mainEditorInstance, setMainEditorInstance] = useState<any>(null);
+  const commentRanges = useMemo(() => {
+    const unresolved = commentList.filter((c) => !c.resolved);
+    if (!mainEditorInstance || unresolved.length === 0) return [];
+    try {
+      return reanchorComments(
+        unresolved.map((c) => ({ id: c.id, charStart: c.charStart, charEnd: c.charEnd, quotedText: c.quotedText })),
+        mainEditorInstance.state.doc
+      ).filter((r) => !r.orphaned);
+    } catch {
+      return unresolved.map((c) => ({ id: c.id, charStart: c.charStart, charEnd: c.charEnd, orphaned: false }));
+    }
+  }, [commentList, mainEditorInstance]);
 
   // Selection tracking for comments + AI
-  const [selection, setSelection] = useState({ hasSelection: false, from: 0, to: 0 });
+  const [selection, setSelection] = useState({ hasSelection: false, from: 0, to: 0, text: "" });
   const [showAIModal, setShowAIModal] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [showPRModal, setShowPRModal] = useState(false);
@@ -167,8 +178,8 @@ export function EditorPageClient({
 
   // Selection change from TipTap
   const handleSelectionChange = useCallback(
-    (hasSelection: boolean, from: number, to: number) => {
-      setSelection({ hasSelection, from, to });
+    (hasSelection: boolean, from: number, to: number, text: string) => {
+      setSelection({ hasSelection, from, to, text });
     },
     []
   );
@@ -285,6 +296,7 @@ export function EditorPageClient({
                 hasSelection={selection.hasSelection}
                 commentRanges={commentRanges}
                 onCommentClick={(id) => { setHighlightedCommentId(id); setShowCommentPanel(true); }}
+                onEditorReady={setMainEditorInstance}
               />
             ) : (
               <textarea
@@ -308,6 +320,7 @@ export function EditorPageClient({
                 commitSha={sha ?? ""}
                 charStart={selection.from}
                 charEnd={selection.to}
+                quotedText={selection.text}
                 onCommentAdded={() => { refreshComments(); setShowCommentPanel(true); }}
               />
             )}
@@ -317,11 +330,10 @@ export function EditorPageClient({
           {showCommentPanel && (
             <div className="w-80 border-l border-border flex-shrink-0">
               <CommentThread
-                owner={owner}
-                repo={repo}
-                filePath={filePath}
-                commitSha={sha ?? ""}
-                userId={userId}
+                comments={commentList}
+                onResolve={resolveComment}
+                onReply={addReply}
+                onRefresh={refreshComments}
                 onClose={() => setShowCommentPanel(false)}
                 highlightedCommentId={highlightedCommentId}
               />
@@ -364,16 +376,22 @@ function EditorWithToolbar({
   hasSelection,
   commentRanges,
   onCommentClick,
+  onEditorReady: onEditorReadyProp,
 }: {
   initialHtml: string;
   onUpdate: (html: string) => void;
-  onSelectionChange: (has: boolean, from: number, to: number) => void;
+  onSelectionChange: (has: boolean, from: number, to: number, text: string) => void;
   onAIEdit: () => void;
   hasSelection: boolean;
   commentRanges: Array<{ id: string; charStart: number; charEnd: number }>;
   onCommentClick: (id: string) => void;
+  onEditorReady?: (editor: import("@tiptap/react").Editor | null) => void;
 }) {
   const [editorInstance, setEditorInstance] = useState<import("@tiptap/react").Editor | null>(null);
+  const handleEditorReady = useCallback((editor: import("@tiptap/react").Editor | null) => {
+    setEditorInstance(editor);
+    onEditorReadyProp?.(editor);
+  }, [onEditorReadyProp]);
 
   return (
     <div className="h-full flex flex-col">
@@ -387,7 +405,7 @@ function EditorWithToolbar({
           initialHtml={initialHtml}
           onUpdate={onUpdate}
           onSelectionChange={onSelectionChange}
-          onEditorReady={setEditorInstance}
+          onEditorReady={handleEditorReady}
           commentRanges={commentRanges}
           onCommentClick={onCommentClick}
         />
@@ -407,7 +425,7 @@ function EditorWithRef({
 }: {
   initialHtml: string;
   onUpdate: (html: string) => void;
-  onSelectionChange: (has: boolean, from: number, to: number) => void;
+  onSelectionChange: (has: boolean, from: number, to: number, text: string) => void;
   onEditorReady: (editor: import("@tiptap/react").Editor | null) => void;
   commentRanges: Array<{ id: string; charStart: number; charEnd: number }>;
   onCommentClick: (id: string) => void;
@@ -442,7 +460,13 @@ function EditorWithRef({
         init() { return []; },
         apply(tr: any, prev: any) {
           const meta = tr.getMeta(key);
-          return meta !== undefined ? meta : prev;
+          if (meta !== undefined) return meta;
+          if (!tr.docChanged || prev.length === 0) return prev;
+          return prev.map((r: any) => ({
+            id: r.id,
+            charStart: tr.mapping.map(r.charStart, 1),
+            charEnd: tr.mapping.map(r.charEnd, -1),
+          })).filter((r: any) => r.charEnd > r.charStart);
         },
       },
       props: {
@@ -493,7 +517,8 @@ function EditorWithRef({
     },
     onSelectionUpdate: ({ editor }: { editor: import("@tiptap/react").Editor }) => {
       const { from, to } = editor.state.selection;
-      onSelectionChange(from !== to, from, to);
+      const text = from !== to ? editor.state.doc.textBetween(from, to, " ") : "";
+      onSelectionChange(from !== to, from, to, text);
     },
     onCreate: ({ editor }: { editor: import("@tiptap/react").Editor }) => {
       onEditorReady(editor);

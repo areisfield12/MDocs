@@ -12,6 +12,7 @@ interface CommentPopoverProps {
   commitSha: string;
   charStart: number;
   charEnd: number;
+  quotedText: string;
   onCommentAdded: () => void;
 }
 
@@ -22,6 +23,7 @@ export function CommentPopover({
   commitSha,
   charStart,
   charEnd,
+  quotedText,
   onCommentAdded,
 }: CommentPopoverProps) {
   const [open, setOpen] = useState(false);
@@ -64,6 +66,7 @@ export function CommentPopover({
           commitSha,
           charStart,
           charEnd,
+          quotedText,
           body: body.trim(),
         }),
       });
