@@ -1,0 +1,520 @@
+"use client";
+
+import { useState, useCallback, useRef, useEffect } from "react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { AppShell } from "@/components/layout/AppShell";
+import { Editor } from "@/components/editor/Editor";
+import { Toolbar } from "@/components/editor/Toolbar";
+import { MarkdownToggle } from "@/components/editor/MarkdownToggle";
+import { FrontmatterEditor } from "@/components/editor/FrontmatterEditor";
+import { AIEditModal } from "@/components/editor/AIEditModal";
+import { CommentPopover } from "@/components/editor/CommentPopover";
+import { CommentThread } from "@/components/editor/CommentThread";
+import { CreatePRModal } from "@/components/pr/CreatePRModal";
+import { useGitHubFile } from "@/hooks/useGitHubFile";
+import { useEditorState } from "@/hooks/useEditorState";
+import { useComments } from "@/hooks/useComments";
+import { htmlToMarkdown, markdownToHtml } from "@/lib/markdown";
+import { FrontmatterData } from "@/types";
+import toast from "react-hot-toast";
+
+// TipTap Editor instance reference type
+interface TipTapEditorRef {
+  chain: () => unknown;
+  getHTML: () => string;
+}
+
+interface EditorPageClientProps {
+  owner: string;
+  repo: string;
+  filePath: string;
+  userId: string;
+  requirePR: boolean;
+  defaultBranch: string;
+}
+
+export function EditorPageClient({
+  owner,
+  repo,
+  filePath,
+  userId,
+  requirePR,
+  defaultBranch,
+}: EditorPageClientProps) {
+  const {
+    loading,
+    error,
+    sha,
+    branch,
+    bodyHtml,
+    rawMarkdown,
+    frontmatterData,
+    hasFrontmatter,
+    setBodyHtml,
+    setFrontmatterData,
+    getCurrentRaw,
+    reload,
+  } = useGitHubFile({ owner, repo, path: filePath, branch: defaultBranch });
+
+  // Editor mode: WYSIWYG or raw markdown
+  const [mode, setMode] = useState<"wysiwyg" | "raw">("wysiwyg");
+  const [rawDraft, setRawDraft] = useState("");
+  const [currentHtml, setCurrentHtml] = useState(bodyHtml);
+  const [currentFrontmatter, setCurrentFrontmatter] = useState<FrontmatterData>(frontmatterData);
+
+  // Update local state when file loads
+  const initialized = useRef(false);
+  if (!initialized.current && !loading && bodyHtml) {
+    initialized.current = true;
+    setCurrentHtml(bodyHtml);
+    setCurrentFrontmatter(frontmatterData);
+    setRawDraft(rawMarkdown);
+  }
+
+  // Comments — lifted for editor highlights and click-to-open
+  const { comments: commentList, refresh: refreshComments } = useComments({ owner, repo, filePath, commitSha: sha ?? "" });
+  const commentRanges = commentList
+    .filter((c) => !c.resolved)
+    .map((c) => ({ id: c.id, charStart: c.charStart, charEnd: c.charEnd }));
+
+  // Selection tracking for comments + AI
+  const [selection, setSelection] = useState({ hasSelection: false, from: 0, to: 0 });
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [selectedText, setSelectedText] = useState("");
+  const [showPRModal, setShowPRModal] = useState(false);
+  const [showCommentPanel, setShowCommentPanel] = useState(false);
+  const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
+
+  // Editor ref for programmatic operations
+  const editorRef = useRef<TipTapEditorRef | null>(null);
+
+  const handleCommit = useCallback(
+    async (content: string, message?: string) => {
+      if (!sha) return null;
+
+      const res = await fetch(`/api/github/${owner}/${repo}/commit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          path: filePath,
+          content,
+          sha,
+          branch,
+          message,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.actionable ?? "Failed to save");
+        return null;
+      }
+
+      toast.success("Saved to GitHub");
+      // Reload to get new SHA
+      reload();
+      return { sha: data.sha };
+    },
+    [sha, owner, repo, filePath, branch, reload]
+  );
+
+  const getCurrentContent = useCallback(() => {
+    return getCurrentRaw();
+  }, [getCurrentRaw]);
+
+  const editorState = useEditorState({
+    onCommit: handleCommit,
+    getCurrentContent,
+    originalContent: rawMarkdown,
+  });
+
+  // Handle WYSIWYG editor updates
+  const handleEditorUpdate = useCallback(
+    (html: string) => {
+      setCurrentHtml(html);
+      setBodyHtml(html);
+      editorState.markUnsaved();
+    },
+    [setBodyHtml, editorState]
+  );
+
+  // Handle frontmatter changes
+  const handleFrontmatterChange = useCallback(
+    (data: FrontmatterData) => {
+      setCurrentFrontmatter(data);
+      setFrontmatterData(data);
+      editorState.markUnsaved();
+    },
+    [setFrontmatterData, editorState]
+  );
+
+  // Toggle between WYSIWYG and raw markdown modes
+  const handleModeToggle = async (newMode: "wysiwyg" | "raw") => {
+    if (newMode === mode) return;
+
+    if (newMode === "raw") {
+      // Convert current HTML to markdown for raw editing
+      const md = htmlToMarkdown(currentHtml);
+      setRawDraft(md);
+    } else {
+      // Convert raw markdown back to HTML for WYSIWYG
+      const html = await markdownToHtml(rawDraft);
+      setCurrentHtml(html);
+      setBodyHtml(html);
+    }
+    setMode(newMode);
+  };
+
+  // Selection change from TipTap
+  const handleSelectionChange = useCallback(
+    (hasSelection: boolean, from: number, to: number) => {
+      setSelection({ hasSelection, from, to });
+    },
+    []
+  );
+
+  // Open AI edit with current selection
+  const handleAIEdit = useCallback(() => {
+    if (!selection.hasSelection) return;
+    // Extract selected text from editor
+    const div = document.querySelector(".tiptap");
+    const sel = window.getSelection();
+    if (sel && sel.toString()) {
+      setSelectedText(sel.toString());
+      setShowAIModal(true);
+    }
+  }, [selection.hasSelection]);
+
+  // Accept AI suggestion — replace selected text in editor
+  const handleAIAccept = useCallback(
+    (newText: string) => {
+      // We inject the accepted text back into TipTap via a DOM-level approach
+      // TipTap will re-serialize on next onUpdate
+      if (editorRef.current) {
+        document.execCommand("insertText", false, newText);
+      }
+    },
+    []
+  );
+
+  // Save logic
+  const handleSave = useCallback(async () => {
+    await editorState.save();
+  }, [editorState]);
+
+  const handleProposeChanges = useCallback(() => {
+    setShowPRModal(true);
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white">
+        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+        <span className="ml-2 text-gray-500">Loading file...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-white gap-4">
+        <AlertCircle className="h-10 w-10 text-red-400" />
+        <div className="text-center">
+          <p className="font-semibold text-gray-900">Unable to load file</p>
+          <p className="text-gray-500 text-sm mt-1">{error}</p>
+        </div>
+        <button
+          onClick={reload}
+          className="px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  const originalRaw = rawMarkdown;
+  const currentRaw = getCurrentRaw();
+
+  return (
+    <AppShell
+      repoOwner={owner}
+      repoName={repo}
+      filePath={filePath}
+      saveStatus={editorState.status}
+      prNumber={editorState.prNumber}
+      prUrl={editorState.prUrl}
+      onSave={requirePR ? undefined : handleSave}
+      onProposeChanges={handleProposeChanges}
+    >
+      <div className="h-full flex flex-col bg-white">
+        {/* Toolbar row */}
+        <div className="flex items-center border-b border-gray-200">
+          <div className="flex-1">
+            {mode === "wysiwyg" && (
+              <Toolbar
+                editor={null} // Will be updated via EditorWithRef
+                onAIEdit={selection.hasSelection ? handleAIEdit : undefined}
+                hasSelection={selection.hasSelection}
+              />
+            )}
+          </div>
+          <div className="px-4 py-2 border-l border-gray-200 flex-shrink-0">
+            <MarkdownToggle mode={mode} onToggle={handleModeToggle} />
+          </div>
+        </div>
+
+        {/* Frontmatter editor (if file has frontmatter) */}
+        {hasFrontmatter && (
+          <FrontmatterEditor
+            data={currentFrontmatter}
+            onChange={handleFrontmatterChange}
+          />
+        )}
+
+        {/* Editor area */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Main editor */}
+          <div className="flex-1 overflow-hidden relative">
+            {mode === "wysiwyg" ? (
+              <EditorWithToolbar
+                initialHtml={currentHtml}
+                onUpdate={handleEditorUpdate}
+                onSelectionChange={handleSelectionChange}
+                onAIEdit={handleAIEdit}
+                hasSelection={selection.hasSelection}
+                commentRanges={commentRanges}
+                onCommentClick={(id) => { setHighlightedCommentId(id); setShowCommentPanel(true); }}
+              />
+            ) : (
+              <textarea
+                value={rawDraft}
+                onChange={(e) => {
+                  setRawDraft(e.target.value);
+                  editorState.markUnsaved();
+                }}
+                className="w-full h-full resize-none font-mono text-sm px-16 py-12 focus:outline-none bg-white"
+                placeholder="Write markdown here..."
+                spellCheck={false}
+              />
+            )}
+
+            {/* Floating comment popover */}
+            {selection.hasSelection && mode === "wysiwyg" && (
+              <CommentPopover
+                owner={owner}
+                repo={repo}
+                filePath={filePath}
+                commitSha={sha ?? ""}
+                charStart={selection.from}
+                charEnd={selection.to}
+                onCommentAdded={() => { refreshComments(); setShowCommentPanel(true); }}
+              />
+            )}
+          </div>
+
+          {/* Comment sidebar */}
+          {showCommentPanel && (
+            <div className="w-80 border-l border-gray-200 flex-shrink-0">
+              <CommentThread
+                owner={owner}
+                repo={repo}
+                filePath={filePath}
+                commitSha={sha ?? ""}
+                userId={userId}
+                onClose={() => setShowCommentPanel(false)}
+                highlightedCommentId={highlightedCommentId}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modals */}
+      <AIEditModal
+        open={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        selectedText={selectedText}
+        onAccept={handleAIAccept}
+      />
+
+      <CreatePRModal
+        open={showPRModal}
+        onClose={() => setShowPRModal(false)}
+        owner={owner}
+        repo={repo}
+        filePath={filePath}
+        baseBranch={branch}
+        originalContent={originalRaw}
+        newContent={currentRaw}
+        onSuccess={(prNumber, prUrl) => {
+          editorState.setPROpen(prNumber, prUrl);
+        }}
+      />
+    </AppShell>
+  );
+}
+
+// Sub-component that provides the editor ref to the Toolbar
+function EditorWithToolbar({
+  initialHtml,
+  onUpdate,
+  onSelectionChange,
+  onAIEdit,
+  hasSelection,
+  commentRanges,
+  onCommentClick,
+}: {
+  initialHtml: string;
+  onUpdate: (html: string) => void;
+  onSelectionChange: (has: boolean, from: number, to: number) => void;
+  onAIEdit: () => void;
+  hasSelection: boolean;
+  commentRanges: Array<{ id: string; charStart: number; charEnd: number }>;
+  onCommentClick: (id: string) => void;
+}) {
+  const [editorInstance, setEditorInstance] = useState<import("@tiptap/react").Editor | null>(null);
+
+  return (
+    <div className="h-full flex flex-col">
+      <Toolbar
+        editor={editorInstance}
+        onAIEdit={onAIEdit}
+        hasSelection={hasSelection}
+      />
+      <div className="flex-1 overflow-hidden">
+        <EditorWithRef
+          initialHtml={initialHtml}
+          onUpdate={onUpdate}
+          onSelectionChange={onSelectionChange}
+          onEditorReady={setEditorInstance}
+          commentRanges={commentRanges}
+          onCommentClick={onCommentClick}
+        />
+      </div>
+    </div>
+  );
+}
+
+// Editor wrapper that exposes the editor instance
+function EditorWithRef({
+  initialHtml,
+  onUpdate,
+  onSelectionChange,
+  onEditorReady,
+  commentRanges,
+  onCommentClick,
+}: {
+  initialHtml: string;
+  onUpdate: (html: string) => void;
+  onSelectionChange: (has: boolean, from: number, to: number) => void;
+  onEditorReady: (editor: import("@tiptap/react").Editor | null) => void;
+  commentRanges: Array<{ id: string; charStart: number; charEnd: number }>;
+  onCommentClick: (id: string) => void;
+}) {
+  const { useEditor, EditorContent } = require("@tiptap/react");
+  const StarterKit = require("@tiptap/starter-kit").default;
+  const Link = require("@tiptap/extension-link").default;
+  const Placeholder = require("@tiptap/extension-placeholder").default;
+  const Table = require("@tiptap/extension-table").Table;
+  const TableRow = require("@tiptap/extension-table-row").TableRow;
+  const TableCell = require("@tiptap/extension-table-cell").TableCell;
+  const TableHeader = require("@tiptap/extension-table-header").TableHeader;
+  const Underline = require("@tiptap/extension-underline").default;
+  const { Extension } = require("@tiptap/core");
+  const { Plugin, PluginKey } = require("prosemirror-state");
+  const { Decoration, DecorationSet } = require("prosemirror-view");
+
+  // Stable callback ref — always current, safe to read from plugin
+  const onCommentClickRef = useRef<(id: string) => void>(onCommentClick);
+  onCommentClickRef.current = onCommentClick;
+
+  // Stable plugin key + plugin (created once via ref)
+  const pluginKeyRef = useRef<any>(null);
+  const pluginRef = useRef<any>(null);
+  const extensionRef = useRef<any>(null);
+  if (!pluginKeyRef.current) {
+    pluginKeyRef.current = new PluginKey("commentHighlights");
+    const key = pluginKeyRef.current;
+    pluginRef.current = new Plugin({
+      key,
+      state: {
+        init() { return []; },
+        apply(tr: any, prev: any) {
+          const meta = tr.getMeta(key);
+          return meta !== undefined ? meta : prev;
+        },
+      },
+      props: {
+        decorations(state: any) {
+          const ranges: Array<{ id: string; charStart: number; charEnd: number }> = key.getState(state) || [];
+          const maxPos = state.doc.content.size;
+          const decos = ranges.flatMap((r) => {
+            try {
+              if (r.charStart >= maxPos || r.charEnd <= r.charStart) return [];
+              return [Decoration.inline(r.charStart, Math.min(r.charEnd, maxPos), { class: "comment-highlight" })];
+            } catch { return []; }
+          });
+          return DecorationSet.create(state.doc, decos);
+        },
+        handleClick(view: any, pos: number) {
+          const ranges: Array<{ id: string; charStart: number; charEnd: number }> = key.getState(view.state) || [];
+          const clicked = ranges.find((r) => pos >= r.charStart && pos < r.charEnd);
+          if (clicked) {
+            onCommentClickRef.current(clicked.id);
+            return true;
+          }
+          return false;
+        },
+      },
+    });
+    extensionRef.current = Extension.create({
+      name: "commentHighlights",
+      addProseMirrorPlugins() { return [pluginRef.current]; },
+    });
+  }
+
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit,
+      Underline,
+      Link.configure({ openOnClick: false }),
+      Placeholder.configure({ placeholder: "Start writing..." }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      extensionRef.current,
+    ],
+    content: initialHtml,
+    onUpdate: ({ editor }: { editor: import("@tiptap/react").Editor }) => {
+      onUpdate(editor.getHTML());
+    },
+    onSelectionUpdate: ({ editor }: { editor: import("@tiptap/react").Editor }) => {
+      const { from, to } = editor.state.selection;
+      onSelectionChange(from !== to, from, to);
+    },
+    onCreate: ({ editor }: { editor: import("@tiptap/react").Editor }) => {
+      onEditorReady(editor);
+    },
+    onDestroy: () => onEditorReady(null),
+    editorProps: {
+      attributes: {
+        class: "prose prose-gray max-w-none focus:outline-none min-h-full px-16 py-12",
+      },
+    },
+  });
+
+  // Push updated comment ranges into the ProseMirror plugin
+  useEffect(() => {
+    if (!editor) return;
+    try {
+      editor.view.dispatch(
+        editor.view.state.tr.setMeta(pluginKeyRef.current, commentRanges)
+      );
+    } catch { /* ignore if editor is destroyed */ }
+  }, [editor, commentRanges]);
+
+  return <EditorContent editor={editor} className="h-full overflow-y-auto" />;
+}
