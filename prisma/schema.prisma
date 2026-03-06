@@ -76,9 +76,10 @@ model Comment {
   repoName  String
   filePath  String
   commitSha String
-  charStart Int
-  charEnd   Int
-  body      String   @db.Text
+  charStart  Int
+  charEnd    Int
+  quotedText String?  @db.Text
+  body       String   @db.Text
   resolved  Boolean  @default(false)
   authorId  String
   author    User     @relation(fields: [authorId], references: [id])
