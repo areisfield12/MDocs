@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, Star, Settings, ChevronRight, ChevronDown, Loader2, FileText } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Star, Settings, Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FileIcon } from "@/components/repo/FileIcon";
-import { FileNode } from "@/types";
-import { MDocsLogo } from "@/components/ui/MDocsLogo";
+import { RepoInfo } from "@/types";
+import { MDocsMark } from "@/components/ui/MDocsLogo";
+import toast from "react-hot-toast";
 
 interface SidebarProps {
   currentRepoOwner?: string;
@@ -18,29 +18,26 @@ interface SidebarProps {
 export function Sidebar({
   currentRepoOwner,
   currentRepoName,
-  currentFilePath,
 }: SidebarProps) {
   const pathname = usePathname();
-  const [fileTree, setFileTree] = useState<FileNode[]>([]);
-  const [fileTreeLoading, setFileTreeLoading] = useState(false);
-  const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set());
+  const router = useRouter();
+  const [repos, setRepos] = useState<RepoInfo[]>([]);
+  const [reposLoading, setReposLoading] = useState(true);
 
-  // Load file tree if we're in a repo context
   useEffect(() => {
-    if (!currentRepoOwner || !currentRepoName) return;
-
-    setFileTreeLoading(true);
-    fetch(`/api/github/${currentRepoOwner}/${currentRepoName}/files`)
+    setReposLoading(true);
+    fetch("/api/github/repos")
       .then((r) => r.json())
       .then((data) => {
-        setFileTree(data.files ?? []);
+        if (data.repos) {
+          setRepos(data.repos);
+        }
       })
-      .catch(console.error)
-      .finally(() => setFileTreeLoading(false));
-  }, [currentRepoOwner, currentRepoName]);
+      .catch(() => toast.error("Failed to load repositories."))
+      .finally(() => setReposLoading(false));
+  }, []);
 
   const navItems = [
-    { href: "/dashboard", icon: Home, label: "Dashboard" },
     { href: "/dashboard#starred", icon: Star, label: "Starred" },
     { href: "/settings", icon: Settings, label: "Settings" },
   ];
@@ -48,15 +45,15 @@ export function Sidebar({
   return (
     <aside className="h-full bg-surface-secondary border-r border-border-secondary flex flex-col">
       {/* Logo */}
-      <div className="px-4 h-14 flex items-center border-b border-border-secondary">
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-fg">
-          <FileText className="h-[18px] w-[18px] text-fg-tertiary" />
-          <span className="text-[14px] tracking-[-0.01em]">MDocs</span>
+      <div className="px-3 py-4 mb-2">
+        <Link href="/dashboard" className="flex items-center gap-2.5">
+          <MDocsMark size={22} />
+          <span className="text-[15px] font-bold text-fg tracking-[-0.01em]">MDocs</span>
         </Link>
       </div>
 
       {/* Nav links */}
-      <nav className="px-2 py-2 space-y-px">
+      <nav className="px-2 space-y-px">
         {navItems.map(({ href, icon: Icon, label }) => (
           <Link
             key={href}
@@ -74,99 +71,96 @@ export function Sidebar({
         ))}
       </nav>
 
-      {/* File tree for current repo */}
-      {currentRepoOwner && currentRepoName && (
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-3 py-2 border-y border-border-secondary">
-            <Link
-              href={`/repos/${currentRepoOwner}/${currentRepoName}`}
-              className="text-[11px] font-medium text-fg-tertiary hover:text-fg-secondary uppercase tracking-wider"
-            >
-              {currentRepoOwner}/{currentRepoName}
-            </Link>
-          </div>
+      {/* Divider */}
+      <div className="mt-3 border-t border-border-secondary" />
 
-          {fileTreeLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-4 w-4 animate-spin text-fg-tertiary" />
-            </div>
-          ) : (
-            <FileTreeNodes
-              nodes={fileTree}
-              owner={currentRepoOwner}
-              repo={currentRepoName}
-              currentPath={currentFilePath}
-              expandedDirs={expandedDirs}
-              onToggleDir={(path) => {
-                setExpandedDirs((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(path)) next.delete(path);
-                  else next.add(path);
-                  return next;
-                });
-              }}
-              depth={0}
-            />
-          )}
+      {/* Repositories label */}
+      <div className="px-3 pt-3 pb-1">
+        <span className="text-[11px] font-semibold text-fg-tertiary uppercase tracking-[0.08em]">
+          Repositories
+        </span>
+      </div>
+
+      {/* Repo list */}
+      <div className="flex-1 overflow-y-auto">
+        {reposLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-4 w-4 animate-spin text-fg-tertiary" />
+          </div>
+        ) : repos.length === 0 ? (
+          <div className="px-3 py-6 text-center">
+            <p className="text-[12px] text-fg-tertiary">
+              No repositories found.
+            </p>
+          </div>
+        ) : (
+          <div className="py-1">
+            {repos.map((repo) => {
+              const isActive =
+                currentRepoOwner === repo.owner &&
+                currentRepoName === repo.name;
+
+              return (
+                <button
+                  key={repo.fullName}
+                  onClick={() => router.push(`/repos/${repo.owner}/${repo.name}`)}
+                  className={cn(
+                    "w-full flex items-center text-left transition-colors relative",
+                    isActive
+                      ? "bg-surface-emphasis"
+                      : "hover:bg-surface-hover"
+                  )}
+                  style={{ height: "52px", padding: "0 12px" }}
+                >
+                  {/* Accent bar */}
+                  {isActive && (
+                    <div className="absolute left-0 top-2 bottom-2 w-[2px] rounded-full bg-accent" />
+                  )}
+
+                  <div className="min-w-0 flex-1 pl-1">
+                    <div className="text-[13px] font-medium text-fg truncate">
+                      {repo.name}
+                    </div>
+                    <div className="text-[11px] text-fg-tertiary truncate mt-0.5">
+                      {repo.defaultBranch} · {formatUpdatedAt(repo.updatedAt)}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Connect repo link */}
+        <div className="px-2 py-2">
+          <a
+            href="https://github.com/apps/mdocs/installations/new"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Connect repo
+          </a>
         </div>
-      )}
+      </div>
     </aside>
   );
 }
 
-function FileTreeNodes({
-  nodes,
-  owner,
-  repo,
-  currentPath,
-  expandedDirs,
-  onToggleDir,
-  depth,
-}: {
-  nodes: FileNode[];
-  owner: string;
-  repo: string;
-  currentPath?: string;
-  expandedDirs: Set<string>;
-  onToggleDir: (path: string) => void;
-  depth: number;
-}) {
-  return (
-    <ul className="py-1">
-      {nodes.map((node) => (
-        <li key={node.path}>
-          {node.type === "dir" ? (
-            <>
-              <button
-                onClick={() => onToggleDir(node.path)}
-                className="w-full flex items-center gap-1.5 px-3 py-1.5 text-[13px] text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary transition-colors"
-                style={{ paddingLeft: `${12 + depth * 12}px` }}
-              >
-                {expandedDirs.has(node.path) ? (
-                  <ChevronDown className="h-3 w-3 flex-shrink-0" />
-                ) : (
-                  <ChevronRight className="h-3 w-3 flex-shrink-0" />
-                )}
-                <span className="truncate">{node.name}</span>
-              </button>
-            </>
-          ) : (
-            <Link
-              href={`/repos/${owner}/${repo}/edit/${node.path}`}
-              className={cn(
-                "flex items-center gap-2 py-1.5 text-[13px] transition-colors truncate",
-                currentPath === node.path
-                  ? "bg-surface-active text-fg font-medium"
-                  : "text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary"
-              )}
-              style={{ paddingLeft: `${20 + depth * 12}px`, paddingRight: "12px" }}
-            >
-              <FileIcon path={node.path} className="h-3.5 w-3.5" />
-              <span className="truncate">{node.name}</span>
-            </Link>
-          )}
-        </li>
-      ))}
-    </ul>
-  );
+function formatUpdatedAt(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffDays < 1) return "today";
+    if (diffDays === 1) return "yesterday";
+    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  } catch {
+    return dateStr;
+  }
 }

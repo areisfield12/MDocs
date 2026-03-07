@@ -38,7 +38,7 @@ export function AppShell({
       <div
         className={cn(
           "flex-shrink-0 transition-all duration-200",
-          sidebarOpen ? "w-64" : "w-0 overflow-hidden"
+          sidebarOpen ? "w-[200px]" : "w-0 overflow-hidden"
         )}
       >
         <Sidebar
