@@ -6,7 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Editor } from "@/components/editor/Editor";
 import { Toolbar } from "@/components/editor/Toolbar";
 import { MarkdownToggle } from "@/components/editor/MarkdownToggle";
-import { FrontmatterEditor } from "@/components/editor/FrontmatterEditor";
+import { FrontmatterPanel } from "@/components/editor/FrontmatterPanel";
 import { AIEditModal } from "@/components/editor/AIEditModal";
 import { CommentPopover } from "@/components/editor/CommentPopover";
 import { CommentThread } from "@/components/editor/CommentThread";
@@ -16,6 +16,7 @@ import { useEditorState } from "@/hooks/useEditorState";
 import { useComments } from "@/hooks/useComments";
 import { htmlToMarkdown, markdownToHtml } from "@/lib/markdown";
 import { FrontmatterData } from "@/types";
+import { useCollectionSchema } from "@/hooks/useCollectionSchema";
 import { reanchorComments } from "@/lib/commentAnchoring";
 import toast from "react-hot-toast";
 
@@ -95,6 +96,13 @@ export function EditorPageClient({
   const [showPRModal, setShowPRModal] = useState(false);
   const [showCommentPanel, setShowCommentPanel] = useState(false);
   const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
+
+  // Collection schema for typed frontmatter fields
+  const { schema: collectionSchema, collectionLabel } = useCollectionSchema({
+    owner,
+    repo,
+    filePath,
+  });
 
   // Editor ref for programmatic operations
   const editorRef = useRef<TipTapEditorRef | null>(null);
@@ -277,14 +285,6 @@ export function EditorPageClient({
           </div>
         </div>
 
-        {/* Frontmatter editor (if file has frontmatter) */}
-        {hasFrontmatter && (
-          <FrontmatterEditor
-            data={currentFrontmatter}
-            onChange={handleFrontmatterChange}
-          />
-        )}
-
         {/* Editor area */}
         <div className="flex-1 flex overflow-hidden">
           {/* Main editor */}
@@ -340,6 +340,16 @@ export function EditorPageClient({
                 highlightedCommentId={highlightedCommentId}
               />
             </div>
+          )}
+
+          {/* Frontmatter sidebar panel */}
+          {hasFrontmatter && (
+            <FrontmatterPanel
+              data={currentFrontmatter}
+              onChange={handleFrontmatterChange}
+              schema={collectionSchema}
+              collectionLabel={collectionLabel}
+            />
           )}
         </div>
       </div>

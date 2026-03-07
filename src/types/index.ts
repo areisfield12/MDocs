@@ -136,3 +136,27 @@ export interface PullRequestResult {
 export interface FrontmatterData {
   [key: string]: string | number | boolean | string[] | null;
 }
+
+// ─── Collection Schema ──────────────────────────────────────────────────────
+
+export type SchemaFieldType = "text" | "textarea" | "date" | "tags" | "toggle" | "select";
+
+export interface SchemaField {
+  key: string;
+  label: string;
+  type: SchemaFieldType;
+  required?: boolean;
+  default?: string | boolean | number;
+  options?: string[];
+}
+
+export interface Collection {
+  id: string;
+  repoOwner: string;
+  repoName: string;
+  label: string;
+  folderPath: string;
+  schema: SchemaField[];
+  position: number;
+  createdAt: string;
+}
