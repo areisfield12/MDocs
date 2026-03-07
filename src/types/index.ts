@@ -136,3 +136,41 @@ export interface PullRequestResult {
 export interface FrontmatterData {
   [key: string]: string | number | boolean | string[] | null;
 }
+
+// ─── Collections & Sidebar ──────────────────────────────────────────────
+
+export interface Collection {
+  id: string;
+  repoOwner: string;
+  repoName: string;
+  label: string;
+  folderPath: string;
+  schema: CollectionSchemaField[];
+  position: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CollectionSchemaField {
+  key: string;
+  label: string;
+  type: "text" | "textarea" | "date" | "tags" | "toggle" | "select";
+  required?: boolean;
+  default?: string | boolean | number;
+  options?: string[];
+}
+
+export interface FolderNode {
+  path: string;
+  name: string;
+  children: FolderNode[];
+}
+
+export interface CollectionFile {
+  path: string;
+  title: string;
+  date: string | null;
+  author: string | null;
+  published: boolean | null;
+  lastModified: string | null;
+}

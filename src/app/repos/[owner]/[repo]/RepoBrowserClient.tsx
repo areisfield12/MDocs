@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Loader2, GitBranch } from "lucide-react";
-import { FileTree } from "@/components/repo/FileTree";
-import { FileNode } from "@/types";
-import toast from "react-hot-toast";
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { RepoSidebar } from "@/components/sidebar/RepoSidebar";
+import { CollectionListView } from "@/components/collections/CollectionListView";
+import { Collection } from "@/types";
 
 interface RepoBrowserClientProps {
   owner: string;
@@ -14,97 +14,92 @@ interface RepoBrowserClientProps {
   requirePR: boolean;
 }
 
+type ContentView =
+  | { type: "empty" }
+  | { type: "collection"; collection: Collection };
+
 export function RepoBrowserClient({
   owner,
   repo,
-  initialStarredPaths,
 }: RepoBrowserClientProps) {
-  const [files, setFiles] = useState<FileNode[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [branch, setBranch] = useState<string>("");
-  const [starredPaths, setStarredPaths] = useState<string[]>(initialStarredPaths);
+  const router = useRouter();
+  const [contentView, setContentView] = useState<ContentView>({
+    type: "empty",
+  });
 
-  useEffect(() => {
-    fetch(`/api/github/${owner}/${repo}/files`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.files) {
-          setFiles(data.files);
-          setBranch(data.branch ?? "");
-        } else {
-          toast.error(data.actionable ?? "Failed to load files");
-        }
-      })
-      .catch(() => toast.error("Failed to load files. Check your connection."))
-      .finally(() => setLoading(false));
-  }, [owner, repo]);
+  const handleSelectCollection = useCallback((collection: Collection) => {
+    setContentView({ type: "collection", collection });
+  }, []);
 
-  const handleToggleStar = async (filePath: string) => {
-    const isStarred = starredPaths.includes(filePath);
+  const handleSelectFile = useCallback(
+    (filePath: string) => {
+      router.push(`/repos/${owner}/${repo}/edit/${filePath}`);
+    },
+    [owner, repo, router]
+  );
 
-    setStarredPaths((prev) =>
-      isStarred ? prev.filter((p) => p !== filePath) : [...prev, filePath]
-    );
-
-    try {
-      const response = await fetch("/api/stars", {
-        method: isStarred ? "DELETE" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repoOwner: owner, repoName: repo, filePath }),
-      });
-
-      if (!response.ok) {
-        setStarredPaths((prev) =>
-          isStarred ? [...prev, filePath] : prev.filter((p) => p !== filePath)
-        );
-        const data = await response.json();
-        toast.error(data.actionable ?? "Failed to update starred files");
-      }
-    } catch {
-      setStarredPaths((prev) =>
-        isStarred ? [...prev, filePath] : prev.filter((p) => p !== filePath)
-      );
-      toast.error("Failed to update starred files");
-    }
-  };
+  const activeCollectionId =
+    contentView.type === "collection" ? contentView.collection.id : null;
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-lg font-semibold text-fg tracking-[-0.01em]">
-              {owner}/{repo}
-            </h1>
-            {branch && (
-              <div className="flex items-center gap-1.5 text-sm text-fg-tertiary mt-1">
-                <GitBranch className="h-3.5 w-3.5" />
-                <span>{branch}</span>
-              </div>
-            )}
-          </div>
-          <div className="text-sm text-fg-tertiary">
-            {!loading && `${files.length} markdown file${files.length !== 1 ? "s" : ""}`}
-          </div>
-        </div>
+    <div className="flex h-full overflow-hidden">
+      {/* Left panel — sidebar */}
+      <div className="w-60 flex-shrink-0 border-r border-border">
+        <RepoSidebar
+          owner={owner}
+          repo={repo}
+          activeCollectionId={activeCollectionId}
+          activeFolderPath={null}
+          activeFilePath={null}
+          onSelectCollection={handleSelectCollection}
+          onSelectFile={handleSelectFile}
+        />
+      </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-6 w-6 animate-spin text-fg-tertiary" />
-            <span className="ml-2 text-fg-tertiary">Loading files...</span>
-          </div>
+      {/* Right panel — content area */}
+      <div className="flex-1 min-w-0">
+        {contentView.type === "collection" ? (
+          <CollectionListView
+            owner={owner}
+            repo={repo}
+            collection={contentView.collection}
+            onSelectFile={handleSelectFile}
+          />
         ) : (
-          <div className="bg-surface border border-border rounded-lg overflow-hidden">
-            <FileTree
-              files={files}
-              owner={owner}
-              repo={repo}
-              starredPaths={starredPaths}
-              onToggleStar={handleToggleStar}
-            />
-          </div>
+          <WelcomePanel owner={owner} repo={repo} />
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── Welcome Panel (shown when nothing is selected) ─────────────────────
+
+function WelcomePanel({ owner, repo }: { owner: string; repo: string }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center text-center px-8">
+      <div className="w-12 h-12 rounded-xl bg-surface-secondary flex items-center justify-center mb-4">
+        <svg
+          className="h-6 w-6 text-fg-tertiary"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+          />
+        </svg>
+      </div>
+      <h2 className="text-[15px] font-medium text-fg mb-1">
+        {owner}/{repo}
+      </h2>
+      <p className="text-[13px] text-fg-tertiary max-w-[320px]">
+        Select a collection or folder from the sidebar to browse and edit your
+        content.
+      </p>
     </div>
   );
 }
