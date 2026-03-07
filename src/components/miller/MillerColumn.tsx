@@ -47,20 +47,23 @@ export function MillerColumn({
               key={path}
               onClick={() => onSelect(path, item.type)}
               className={cn(
-                "w-full flex items-center gap-2 px-3 py-[7px] text-[13px] transition-colors duration-150",
+                "w-full flex items-center gap-2 px-3 py-[7px] text-[13px] cursor-pointer transition-colors duration-150 relative",
                 isSelected
-                  ? "bg-accent text-fg-inverted"
-                  : "text-fg-secondary hover:bg-surface-hover"
+                  ? "bg-row-selected text-accent"
+                  : "text-fg-secondary hover:bg-row-hover hover:text-text-primary"
               )}
             >
+              {isSelected && (
+                <div className="absolute left-0 top-1 bottom-1 w-[2px] rounded-full bg-accent" />
+              )}
               {item.type === "folder" && (
-                <Folder className={cn("h-3.5 w-3.5 flex-shrink-0", isSelected ? "text-fg-inverted" : "text-fg-tertiary")} />
+                <Folder className={cn("h-3.5 w-3.5 flex-shrink-0", isSelected ? "text-accent" : "text-fg-tertiary")} />
               )}
               {item.type === "collection" && (
-                <LayoutGrid className={cn("h-3.5 w-3.5 flex-shrink-0", isSelected ? "text-fg-inverted" : "text-fg-tertiary")} />
+                <LayoutGrid className={cn("h-3.5 w-3.5 flex-shrink-0", isSelected ? "text-accent" : "text-fg-tertiary")} />
               )}
               {item.type === "file" && (
-                <FileText className={cn("h-3.5 w-3.5 flex-shrink-0", isSelected ? "text-fg-inverted" : "text-fg-tertiary")} />
+                <FileText className={cn("h-3.5 w-3.5 flex-shrink-0", isSelected ? "text-accent" : "text-fg-tertiary")} />
               )}
 
               <span className="truncate flex-1 text-left">
@@ -68,7 +71,7 @@ export function MillerColumn({
               </span>
 
               {isNavigable && (
-                <ChevronRight className={cn("h-3 w-3 flex-shrink-0", isSelected ? "text-fg-inverted/70" : "text-fg-tertiary/50")} />
+                <ChevronRight className={cn("h-3 w-3 flex-shrink-0", isSelected ? "text-accent/70" : "text-fg-tertiary/50")} />
               )}
             </button>
           );

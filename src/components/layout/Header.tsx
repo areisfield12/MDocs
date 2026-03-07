@@ -39,7 +39,7 @@ export function Header({
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
-          className="p-1.5 rounded-md text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary transition-colors"
+          className="p-1 rounded-sm text-fg-tertiary hover:bg-bg-muted hover:text-text-primary cursor-pointer transition-colors"
           aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
         >
           {sidebarOpen
@@ -73,7 +73,7 @@ export function Header({
         {session?.user && (
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-surface-hover transition-colors">
+              <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-bg-muted transition-colors">
                 {session.user.image ? (
                   <Image
                     src={session.user.image}
@@ -108,7 +108,7 @@ export function Header({
                   <Link
                     href="/settings"
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 text-fg-secondary hover:bg-surface-hover cursor-pointer outline-none"
+                      "flex items-center gap-2 px-3 py-2 text-fg-secondary hover:bg-bg-muted cursor-pointer outline-none"
                     )}
                   >
                     <Settings className="h-4 w-4" />
@@ -116,7 +116,7 @@ export function Header({
                   </Link>
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
-                  className="flex items-center gap-2 px-3 py-2 text-red-500 hover:bg-surface-hover cursor-pointer outline-none"
+                  className="flex items-center gap-2 px-3 py-2 text-red-500 hover:bg-bg-muted cursor-pointer outline-none"
                   onSelect={() => signOut({ callbackUrl: "/" })}
                 >
                   <LogOut className="h-4 w-4" />

@@ -46,6 +46,15 @@
   /* Brand */
   --color-brand:          #4f7af8;
 
+  /* Interactive rows */
+  --color-row-hover:      rgba(0, 0, 0, 0.04);
+  --color-row-selected:   #eff4ff;
+
+  /* Draft pill */
+  --color-draft-bg:       #f4f4f5;
+  --color-draft-text:     #71717a;
+  --color-draft-border:   #e4e4e7;
+
   /* Shadows (lighter for light mode) */
   --shadow-sm:  0 1px 2px rgba(0,0,0,0.06);
   --shadow-md:  0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06);
@@ -85,6 +94,15 @@
   --color-warning-subtle: #2e2008;
   --color-error:          #f26c6c;
   --color-error-subtle:   #2e1010;
+
+  /* Interactive rows */
+  --color-row-hover:      rgba(255, 255, 255, 0.09);
+  --color-row-selected:   rgba(79, 122, 248, 0.15);
+
+  /* Draft pill */
+  --color-draft-bg:       rgba(255, 255, 255, 0.08);
+  --color-draft-text:     #a0a0ab;
+  --color-draft-border:   rgba(255, 255, 255, 0.12);
 
   /* Shadows (heavier for dark mode) */
   --shadow-sm:  0 1px 2px rgba(0,0,0,0.4);
@@ -149,4 +167,9 @@
   --radius-md:   6px;
   --radius-lg:   10px;
   --radius-full: 9999px;
+
+  /* Transitions */
+  --duration-fast:    100ms;
+  --duration-default: 150ms;
+  --easing-default:   cubic-bezier(0.16, 1, 0.3, 1);
 }

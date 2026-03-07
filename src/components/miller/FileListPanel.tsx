@@ -115,7 +115,7 @@ export function FileListPanel({
               <button
                 key={file.path}
                 onClick={() => onSelectFile(file.path)}
-                className="w-full grid grid-cols-[1fr_100px_120px_120px_120px] gap-2 px-6 items-center border-b border-border text-left hover:bg-surface-hover transition-colors duration-150 group"
+                className="w-full grid grid-cols-[1fr_100px_120px_120px_120px] gap-2 px-6 items-center border-b border-border text-left cursor-pointer hover:bg-row-hover transition-colors duration-150 group"
                 style={{ height: "44px" }}
               >
                 <span className="text-[13px] text-fg font-medium truncate">
@@ -128,7 +128,7 @@ export function FileListPanel({
                   {file.date ? formatDate(file.date) : "—"}
                 </span>
                 <span className="text-[12px] text-fg-tertiary truncate">
-                  {file.author ?? "—"}
+                  {file.author || "—"}
                 </span>
                 <span className="text-[12px] text-fg-tertiary truncate">
                   {file.lastModified
@@ -153,7 +153,7 @@ function StatusPill({ published }: { published: boolean | null }) {
         "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium",
         published
           ? "bg-emerald-500/15 text-emerald-400"
-          : "bg-neutral-500/15 text-fg-tertiary"
+          : "bg-draft-bg text-draft-text border border-draft-border"
       )}
     >
       {published ? "Published" : "Draft"}
