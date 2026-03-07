@@ -199,10 +199,12 @@ export function EditorPageClient({
   // Accept AI suggestion — replace selected text in editor
   const handleAIAccept = useCallback(
     (newText: string) => {
-      // We inject the accepted text back into TipTap via a DOM-level approach
-      // TipTap will re-serialize on next onUpdate
       if (editorRef.current) {
-        document.execCommand("insertText", false, newText);
+        const editor = editorRef.current;
+        (editor.chain() as { focus: () => { insertContent: (text: string) => { run: () => void } } })
+          .focus()
+          .insertContent(newText)
+          .run();
       }
     },
     []

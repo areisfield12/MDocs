@@ -147,3 +147,19 @@ model RepoSettings {
 
   @@unique([repoOwner, repoName])
 }
+
+// ─── Content Collections ──────────────────────────────────────────────────
+
+model Collection {
+  id         String   @id @default(cuid())
+  repoOwner  String
+  repoName   String
+  label      String
+  folderPath String
+  schema     Json     @default("[]")
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([repoOwner, repoName, folderPath])
+}
