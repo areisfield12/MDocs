@@ -63,15 +63,15 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 
 | Issue | Location | Fix |
 |---|---|---|
-| AI text insertion uses deprecated `document.execCommand("insertText")` | `EditorPageClient.tsx:200-209` | Replace with TipTap's `editor.chain().insertContent()` API |
+| ~~AI text insertion uses deprecated `document.execCommand("insertText")`~~ | ~~`EditorPageClient.tsx:200-209`~~ | ~~Fixed — now uses `editor.chain().focus().insertContent()`~~ |
 | `EditorWithRef` duplicates editor config using `require()` calls, missing CodeBlockLowlight | Line 433 | Refactor to share single editor config, add CodeBlockLowlight to this instance |
 | Selection uses `window.getSelection()` instead of TipTap state | `EditorPageClient.tsx` | Use `editor.state.selection` instead |
 | No Cmd+S keyboard shortcut | Editor | Add `useEffect` keydown listener that calls save handler |
 
 ### Not yet built (priority order)
 
-1. Content collections + Webflow-style sidebar navigation
-2. Schema-driven frontmatter editor (right sidebar panel with proper field types)
+1. Content collections + Webflow-style sidebar navigation — **data layer and API routes done** (Collection model, CRUD routes, folder tree endpoint, collection files endpoint). Frontend sidebar/list UI not yet built.
+2. Schema-driven frontmatter editor (right sidebar panel with proper field types) — **schema storage done** (JSON schema field on Collection model). Frontend form UI not yet built.
 3. New post creation flow
 4. Image upload and insertion
 5. Shareable draft preview link
@@ -96,10 +96,14 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 | `/api/ai/pr-description` | POST | AI PR title/body from diff |
 | `/api/settings/repo` | POST | Upsert repo settings |
 | `/api/stars` | GET/POST/DELETE | Star/unstar files |
+| `/api/collections` | GET/POST | List/create collections |
+| `/api/collections/[id]` | PATCH/DELETE | Update/delete a collection |
+| `/api/github/[owner]/[repo]/tree` | GET | Folder tree (folders only, nested) |
+| `/api/github/[owner]/[repo]/collection` | GET | List files in a folder with parsed frontmatter |
 
 ### Existing Prisma models (additive changes only)
 
-`Account`, `Session`, `VerificationToken`, `User`, `Comment`, `Reply`, `Suggestion` (DB only — no API routes or UI yet), `StarredFile`, `RepoSettings`
+`Account`, `Session`, `VerificationToken`, `User`, `Comment`, `Reply`, `Suggestion` (DB only — no API routes or UI yet), `StarredFile`, `RepoSettings`, `Collection`
 
 ### Key dependencies
 
@@ -274,7 +278,7 @@ Collection {
 ## What NOT to change without asking
 
 - The GitHub App authentication model — all writes must use `getOctokitForRepo(owner)` from `src/lib/github-app.ts`, never user OAuth tokens
-- The Prisma schema for `Comment`, `Reply`, `Suggestion`, `User`, `StarredFile`, `RepoSettings` — additive changes only, never modify existing fields
+- The Prisma schema for `Comment`, `Reply`, `Suggestion`, `User`, `StarredFile`, `RepoSettings`, `Collection` — additive changes only, never modify existing fields
 - The TipTap editor core setup in `src/components/editor/` — extend it, don't replace it
 - NextAuth configuration in `src/lib/auth.ts`
 - The markdown pipeline in `src/lib/markdown.ts` — extend `prepareFileForEditor()` and `buildRawMarkdown()` if needed, don't rewrite them
