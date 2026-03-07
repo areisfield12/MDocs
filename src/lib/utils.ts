@@ -80,6 +80,19 @@ export function generateBranchName(githubLogin: string, filePath: string): strin
 }
 
 /**
+ * Convert a markdown filename to a human-readable display name.
+ * Strips extension, date prefix, replaces separators, and title-cases.
+ * Example: "2025-07-28-five-ways-to-automate.md" → "Five Ways to Automate"
+ */
+export function filePathToDisplayName(filename: string): string {
+  let name = filename.replace(/\.(md|mdx)$/, "");
+  name = name.replace(/^\d{4}-\d{2}-\d{2}-/, "");
+  name = name.replace(/[-_]/g, " ");
+  name = name.replace(/\b\w/g, (c) => c.toUpperCase());
+  return name;
+}
+
+/**
  * Format a commit timestamp as a relative time string (e.g., "3 days ago").
  */
 export function formatRelativeTime(dateString: string): string {

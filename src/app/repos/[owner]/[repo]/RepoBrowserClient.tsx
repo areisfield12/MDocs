@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { RepoSidebar } from "@/components/sidebar/RepoSidebar";
-import { CollectionListView } from "@/components/collections/CollectionListView";
-import { Collection } from "@/types";
+import { Loader2, FileText } from "lucide-react";
+import { MillerColumnsContainer } from "@/components/miller/MillerColumnsContainer";
+import { MillerBreadcrumb } from "@/components/miller/MillerBreadcrumb";
+import { Collection, FileNode, FolderNode } from "@/types";
+import toast from "react-hot-toast";
 
 interface RepoBrowserClientProps {
   owner: string;
@@ -14,22 +16,110 @@ interface RepoBrowserClientProps {
   requirePR: boolean;
 }
 
-type ContentView =
-  | { type: "empty" }
-  | { type: "collection"; collection: Collection };
-
 export function RepoBrowserClient({
   owner,
   repo,
 }: RepoBrowserClientProps) {
   const router = useRouter();
-  const [contentView, setContentView] = useState<ContentView>({
-    type: "empty",
-  });
 
-  const handleSelectCollection = useCallback((collection: Collection) => {
-    setContentView({ type: "collection", collection });
-  }, []);
+  // Data state
+  const [folders, setFolders] = useState<FolderNode[]>([]);
+  const [markdownPaths, setMarkdownPaths] = useState<string[]>([]);
+  const [collections, setCollections] = useState<Collection[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Navigation state
+  const [selectedPath, setSelectedPath] = useState<string[]>([]);
+  const [activeListFolder, setActiveListFolder] = useState<string | null>(null);
+
+  // Fetch tree, files, and collections on mount
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      fetch(`/api/github/${owner}/${repo}/tree`).then((r) => r.json()),
+      fetch(`/api/github/${owner}/${repo}/files`).then((r) => r.json()),
+      fetch(`/api/collections?owner=${owner}&repo=${repo}`).then((r) => r.json()),
+    ])
+      .then(([treeData, filesData, collectionsData]) => {
+        setFolders(treeData.folders ?? []);
+        setMarkdownPaths(
+          ((filesData.files ?? []) as FileNode[]).map((f) => f.path)
+        );
+        setCollections(collectionsData.collections ?? []);
+      })
+      .catch(() => toast.error("Failed to load repository."))
+      .finally(() => setLoading(false));
+  }, [owner, repo]);
+
+  // Folders that contain at least one markdown file at any depth
+  const foldersWithMarkdown = useMemo(() => {
+    const paths = new Set<string>();
+    for (const filePath of markdownPaths) {
+      const parts = filePath.split("/");
+      for (let i = 1; i < parts.length; i++) {
+        paths.add(parts.slice(0, i).join("/"));
+      }
+    }
+    return paths;
+  }, [markdownPaths]);
+
+  // Folders that contain markdown files directly (not just in subfolders)
+  const foldersWithDirectFiles = useMemo(() => {
+    const paths = new Set<string>();
+    for (const filePath of markdownPaths) {
+      const parts = filePath.split("/");
+      if (parts.length > 1) {
+        paths.add(parts.slice(0, -1).join("/"));
+      }
+    }
+    return paths;
+  }, [markdownPaths]);
+
+  const findFolderNode = useCallback(
+    (path: string): FolderNode | null => {
+      const search = (nodes: FolderNode[]): FolderNode | null => {
+        for (const node of nodes) {
+          if (node.path === path) return node;
+          const found = search(node.children);
+          if (found) return found;
+        }
+        return null;
+      };
+      return search(folders);
+    },
+    [folders]
+  );
+
+  const handleSelectFolder = useCallback(
+    (folderPath: string, depth: number) => {
+      // If clicking the already-selected folder at this depth, collapse
+      if (selectedPath[depth] === folderPath) {
+        setSelectedPath(selectedPath.slice(0, depth));
+        setActiveListFolder(null);
+        return;
+      }
+
+      // Truncate to this depth and add new selection
+      const newPath = [...selectedPath.slice(0, depth), folderPath];
+
+      // Check if this folder has subfolders with markdown content
+      const node = findFolderNode(folderPath);
+      const hasSubfoldersWithMd =
+        node !== null &&
+        node.children.some((c) => foldersWithMarkdown.has(c.path));
+      const hasDirectFiles = foldersWithDirectFiles.has(folderPath);
+
+      setSelectedPath(newPath);
+
+      // Show file list panel if folder has direct files and no subfolders with markdown
+      if (!hasSubfoldersWithMd && hasDirectFiles) {
+        setActiveListFolder(folderPath);
+      } else {
+        setActiveListFolder(null);
+      }
+    },
+    [selectedPath, findFolderNode, foldersWithMarkdown, foldersWithDirectFiles]
+  );
 
   const handleSelectFile = useCallback(
     (filePath: string) => {
@@ -38,68 +128,85 @@ export function RepoBrowserClient({
     [owner, repo, router]
   );
 
-  const activeCollectionId =
-    contentView.type === "collection" ? contentView.collection.id : null;
+  const handleBreadcrumbNavigate = useCallback(
+    (depth: number) => {
+      if (depth < 0) {
+        // Root click — reset everything
+        setSelectedPath([]);
+        setActiveListFolder(null);
+      } else {
+        // Navigate to this depth (keep selectedPath up to and including depth)
+        const newPath = selectedPath.slice(0, depth + 1);
+        setSelectedPath(newPath);
 
-  return (
-    <div className="flex h-full overflow-hidden">
-      {/* Left panel — sidebar */}
-      <div className="w-60 flex-shrink-0 border-r border-border">
-        <RepoSidebar
-          owner={owner}
-          repo={repo}
-          activeCollectionId={activeCollectionId}
-          activeFolderPath={null}
-          activeFilePath={null}
-          onSelectCollection={handleSelectCollection}
-          onSelectFile={handleSelectFile}
-        />
-      </div>
+        // Re-evaluate whether the last folder should show file list
+        const lastFolder = newPath[newPath.length - 1];
+        if (lastFolder) {
+          const node = findFolderNode(lastFolder);
+          const hasSubfoldersWithMd =
+            node !== null &&
+            node.children.some((c) => foldersWithMarkdown.has(c.path));
+          const hasDirectFiles = foldersWithDirectFiles.has(lastFolder);
 
-      {/* Right panel — content area */}
-      <div className="flex-1 min-w-0">
-        {contentView.type === "collection" ? (
-          <CollectionListView
-            owner={owner}
-            repo={repo}
-            collection={contentView.collection}
-            onSelectFile={handleSelectFile}
-          />
-        ) : (
-          <WelcomePanel owner={owner} repo={repo} />
-        )}
-      </div>
-    </div>
+          if (!hasSubfoldersWithMd && hasDirectFiles) {
+            setActiveListFolder(lastFolder);
+          } else {
+            setActiveListFolder(null);
+          }
+        } else {
+          setActiveListFolder(null);
+        }
+      }
+    },
+    [selectedPath, findFolderNode, foldersWithMarkdown, foldersWithDirectFiles]
   );
-}
 
-// ─── Welcome Panel (shown when nothing is selected) ─────────────────────
-
-function WelcomePanel({ owner, repo }: { owner: string; repo: string }) {
-  return (
-    <div className="h-full flex flex-col items-center justify-center text-center px-8">
-      <div className="w-12 h-12 rounded-xl bg-surface-secondary flex items-center justify-center mb-4">
-        <svg
-          className="h-6 w-6 text-fg-tertiary"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
-          />
-        </svg>
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-fg-tertiary" />
       </div>
-      <h2 className="text-[15px] font-medium text-fg mb-1">
-        {owner}/{repo}
-      </h2>
-      <p className="text-[13px] text-fg-tertiary max-w-[320px]">
-        Select a collection or folder from the sidebar to browse and edit your
-        content.
-      </p>
+    );
+  }
+
+  // Empty state: no markdown files at all
+  if (markdownPaths.length === 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-center px-8">
+        <div className="w-12 h-12 rounded-xl bg-surface-secondary flex items-center justify-center mb-4">
+          <FileText className="h-6 w-6 text-fg-tertiary" />
+        </div>
+        <h2 className="text-[15px] font-medium text-fg mb-1">
+          {owner}/{repo}
+        </h2>
+        <p className="text-[13px] text-fg-tertiary max-w-[320px]">
+          No markdown files found in this repository.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col overflow-hidden">
+      <MillerBreadcrumb
+        owner={owner}
+        repo={repo}
+        selectedPath={selectedPath}
+        onNavigate={handleBreadcrumbNavigate}
+      />
+      <MillerColumnsContainer
+        folders={folders}
+        collections={collections}
+        markdownPaths={markdownPaths}
+        foldersWithMarkdown={foldersWithMarkdown}
+        foldersWithDirectFiles={foldersWithDirectFiles}
+        selectedPath={selectedPath}
+        activeListFolder={activeListFolder}
+        owner={owner}
+        repo={repo}
+        onSelectFolder={handleSelectFolder}
+        onSelectFile={handleSelectFile}
+      />
     </div>
   );
 }

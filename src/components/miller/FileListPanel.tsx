@@ -6,40 +6,44 @@ import { cn } from "@/lib/utils";
 import { Collection, CollectionFile } from "@/types";
 import toast from "react-hot-toast";
 
-interface CollectionListViewProps {
+interface FileListPanelProps {
   owner: string;
   repo: string;
-  collection: Collection;
+  folderPath: string;
+  collection: Collection | null;
   onSelectFile: (filePath: string) => void;
 }
 
-export function CollectionListView({
+export function FileListPanel({
   owner,
   repo,
+  folderPath,
   collection,
   onSelectFile,
-}: CollectionListViewProps) {
+}: FileListPanelProps) {
   const [files, setFiles] = useState<CollectionFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const label = collection?.label ?? folderPath.split("/").pop() ?? folderPath;
 
   useEffect(() => {
     setLoading(true);
     setSearchQuery("");
     fetch(
-      `/api/github/${owner}/${repo}/collection?folderPath=${encodeURIComponent(collection.folderPath)}`
+      `/api/github/${owner}/${repo}/collection?folderPath=${encodeURIComponent(folderPath)}`
     )
       .then((r) => r.json())
       .then((data) => {
         if (data.files) {
           setFiles(data.files);
         } else {
-          toast.error(data.actionable ?? "Failed to load collection files.");
+          toast.error(data.actionable ?? "Failed to load files.");
         }
       })
-      .catch(() => toast.error("Failed to load collection files."))
+      .catch(() => toast.error("Failed to load files."))
       .finally(() => setLoading(false));
-  }, [owner, repo, collection.folderPath]);
+  }, [owner, repo, folderPath]);
 
   const filteredFiles = useMemo(() => {
     if (!searchQuery.trim()) return files;
@@ -52,17 +56,17 @@ export function CollectionListView({
   }, [files, searchQuery]);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="flex-1 min-w-[400px] border-l border-border-secondary flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-border">
         <div>
           <h1 className="text-lg font-semibold text-fg tracking-[-0.01em]">
-            {collection.label}
+            {label}
           </h1>
           <p className="text-sm text-fg-tertiary mt-0.5">
             {loading
               ? "Loading..."
-              : `${files.length} post${files.length !== 1 ? "s" : ""}`}
+              : `${files.length} file${files.length !== 1 ? "s" : ""}`}
           </p>
         </div>
         <button
@@ -71,7 +75,7 @@ export function CollectionListView({
           title="Coming soon"
         >
           <Plus className="h-3.5 w-3.5" />
-          New post
+          New file
         </button>
       </div>
 
@@ -81,7 +85,7 @@ export function CollectionListView({
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-tertiary" />
           <input
             type="text"
-            placeholder="Search posts..."
+            placeholder="Search files..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-8 pr-3 py-1.5 bg-surface-secondary border border-border rounded-md text-[13px] text-fg placeholder:text-fg-tertiary focus:outline-none focus:ring-1 focus:ring-border focus:border-fg-tertiary"
@@ -111,29 +115,21 @@ export function CollectionListView({
               <button
                 key={file.path}
                 onClick={() => onSelectFile(file.path)}
-                className="w-full grid grid-cols-[1fr_100px_120px_120px_120px] gap-2 px-6 py-3 border-b border-border text-left hover:bg-surface-hover transition-colors group"
+                className="w-full grid grid-cols-[1fr_100px_120px_120px_120px] gap-2 px-6 items-center border-b border-border text-left hover:bg-surface-hover transition-colors duration-150 group"
+                style={{ height: "44px" }}
               >
-                {/* Title */}
-                <span className="text-[13px] text-fg font-medium truncate group-hover:text-fg">
+                <span className="text-[13px] text-fg font-medium truncate">
                   {file.title}
                 </span>
-
-                {/* Status pill */}
                 <span>
                   <StatusPill published={file.published} />
                 </span>
-
-                {/* Date */}
                 <span className="text-[12px] text-fg-tertiary truncate">
                   {file.date ? formatDate(file.date) : "—"}
                 </span>
-
-                {/* Author */}
                 <span className="text-[12px] text-fg-tertiary truncate">
                   {file.author ?? "—"}
                 </span>
-
-                {/* Last modified */}
                 <span className="text-[12px] text-fg-tertiary truncate">
                   {file.lastModified
                     ? formatRelativeTime(file.lastModified)
@@ -147,8 +143,6 @@ export function CollectionListView({
     </div>
   );
 }
-
-// ─── Status Pill ──────────────────────────────────────────────────────────
 
 function StatusPill({ published }: { published: boolean | null }) {
   if (published === null) return <span className="text-[12px] text-fg-tertiary">—</span>;
@@ -167,8 +161,6 @@ function StatusPill({ published }: { published: boolean | null }) {
   );
 }
 
-// ─── Loading Skeleton ─────────────────────────────────────────────────────
-
 function LoadingSkeleton() {
   return (
     <div className="px-6 py-4 space-y-3">
@@ -185,25 +177,21 @@ function LoadingSkeleton() {
   );
 }
 
-// ─── Empty State ──────────────────────────────────────────────────────────
-
 function EmptyState({ hasSearch }: { hasSearch: boolean }) {
   return (
     <div className="flex flex-col items-center justify-center py-16">
       <FileText className="h-10 w-10 text-fg-tertiary opacity-30 mb-3" />
       <p className="text-[14px] text-fg-secondary font-medium">
-        {hasSearch ? "No posts match your search" : "No posts yet"}
+        {hasSearch ? "No files match your search" : "No files here yet"}
       </p>
       <p className="text-[13px] text-fg-tertiary mt-1">
         {hasSearch
           ? "Try a different search term."
-          : "Create your first post to get started."}
+          : "Create your first file to get started."}
       </p>
     </div>
   );
 }
-
-// ─── Date Helpers ─────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string): string {
   try {
