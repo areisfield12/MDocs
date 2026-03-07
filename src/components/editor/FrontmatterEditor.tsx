@@ -115,7 +115,7 @@ export function FrontmatterEditor({ data, onChange }: FrontmatterEditorProps) {
 
       <button
         onClick={handleAddField}
-        className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover transition-colors mt-1"
+        className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover hover:underline cursor-pointer transition-colors mt-1"
       >
         <Plus className="h-3.5 w-3.5" />
         Add field
@@ -154,7 +154,7 @@ function EstablishedFieldRow({
       />
       <button
         onClick={onRemove}
-        className="absolute top-0 right-0 p-1 text-fg-tertiary hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+        className="absolute top-0 right-0 p-1 rounded-sm text-fg-tertiary hover:text-red-500 cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
         aria-label={`Remove ${humanizeKey(fieldKey)} field`}
       >
         <X className="h-3 w-3" />
@@ -203,7 +203,7 @@ function NewFieldRow({
         />
         <button
           onClick={onRemove}
-          className="p-1 text-fg-tertiary hover:text-red-500 transition-colors"
+          className="p-1 rounded-sm text-fg-tertiary hover:text-red-500 cursor-pointer transition-colors"
           aria-label="Remove field"
         >
           <X className="h-3.5 w-3.5" />

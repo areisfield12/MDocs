@@ -62,7 +62,7 @@ export function Sidebar({
               "flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] transition-colors",
               pathname === href || pathname.startsWith(href + "/")
                 ? "bg-surface-active text-fg font-medium"
-                : "text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary"
+                : "text-fg-tertiary hover:bg-row-hover hover:text-text-primary"
             )}
           >
             <Icon className="h-4 w-4" />
@@ -105,10 +105,10 @@ export function Sidebar({
                   key={repo.fullName}
                   onClick={() => router.push(`/repos/${repo.owner}/${repo.name}`)}
                   className={cn(
-                    "w-full flex items-center text-left transition-colors relative",
+                    "w-full flex items-center text-left cursor-pointer transition-colors relative",
                     isActive
                       ? "bg-surface-emphasis"
-                      : "hover:bg-surface-hover"
+                      : "hover:bg-row-hover"
                   )}
                   style={{ height: "52px", padding: "0 12px" }}
                 >
@@ -137,7 +137,7 @@ export function Sidebar({
             href="https://github.com/apps/mdocs/installations/new"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary transition-colors"
+            className="flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] text-fg-tertiary hover:bg-bg-muted hover:text-text-primary transition-colors"
           >
             <Plus className="h-4 w-4" />
             Connect repo

@@ -28,7 +28,7 @@ export function MillerBreadcrumb({
             <ChevronRight className="h-3 w-3 flex-shrink-0" />
             <button
               onClick={() => onNavigate(i)}
-              className="hover:text-fg-secondary transition-colors duration-150"
+              className="cursor-pointer hover:text-text-primary transition-colors duration-150"
             >
               {name}
             </button>

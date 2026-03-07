@@ -30,9 +30,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           variant === "primary" &&
             "bg-fg text-fg-inverted hover:bg-fg/90",
           variant === "secondary" &&
-            "bg-surface-tertiary text-fg-secondary hover:bg-surface-hover",
+            "bg-surface-tertiary text-fg-secondary hover:bg-bg-overlay hover:border hover:border-border-strong",
           variant === "ghost" &&
-            "text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary",
+            "text-fg-tertiary hover:bg-bg-muted hover:text-text-primary",
           variant === "danger" &&
             "bg-red-600 text-white hover:bg-red-700",
           // Sizes
