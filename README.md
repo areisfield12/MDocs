@@ -6,9 +6,11 @@ Collaborative markdown editor for GitHub. Google Docs experience for teams manag
 
 ## Why MDocs exists
 
-Modern teams are storing more of their critical knowledge in GitHub than ever before. Style guides, agent configs, sales playbooks, and persona definitions increasingly live as markdown files in repos — because AI tools like Claude Code and Cursor need to read them from source.
+Modern teams are storing more of their critical knowledge in GitHub than ever before. Style guides, agent configs, sales playbooks, and persona definitions increasingly live as markdown files in repos because AI tools like Claude Code and Cursor need to read them from source.
 
-But the people who _own_ that content are not engineers. They shouldn't need to know what a branch is.
+But the people who _own_ that content often are not engineers with experience writing markdown and using Git commands.
+
+MDocs is built to bridge the gap between collaborative doc-editing tools like Notion and the new world (for many) of markdown and GitHub.
 
 * * *
 
