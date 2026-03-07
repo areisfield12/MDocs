@@ -150,6 +150,8 @@ export interface SchemaField {
   options?: string[];
 }
 
+export type CollectionSchemaField = SchemaField;
+
 export interface Collection {
   id: string;
   repoOwner: string;
@@ -159,4 +161,22 @@ export interface Collection {
   schema: SchemaField[];
   position: number;
   createdAt: string;
+  updatedAt: string;
+}
+
+// ─── Sidebar Navigation ─────────────────────────────────────────────────────
+
+export interface FolderNode {
+  path: string;
+  name: string;
+  children: FolderNode[];
+}
+
+export interface CollectionFile {
+  path: string;
+  title: string;
+  date: string | null;
+  author: string | null;
+  published: boolean | null;
+  lastModified: string | null;
 }
