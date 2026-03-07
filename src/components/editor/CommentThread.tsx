@@ -58,11 +58,7 @@ export function CommentThread({
 
       {/* Comment list */}
       <div className="flex-1 overflow-y-auto divide-y divide-border-secondary">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-4 w-4 animate-spin text-fg-tertiary" />
-          </div>
-        ) : comments.length === 0 ? (
+        {comments.length === 0 ? (
           <div className="text-center py-12 px-4">
             <MessageSquare className="h-8 w-8 text-fg-tertiary mx-auto mb-2" />
             <p className="text-sm text-fg-secondary">No comments yet</p>
