@@ -1,88 +1,143 @@
-# MDocs: a GitHub-integrated, Notion-style markdown editor
+# MDocs
 
-Collaborative markdown editor for GitHub. Google Docs experience for teams managing agent configs, style guides, and playbooks in repos.
+Websites are moving from Webflow to code. But the CMS isn't coming with them. MDocs gives your content team back their editor — without moving the files.
 
-* * *
+---
 
-## Why MDocs exists
+**GitHub files. Google Docs experience.**
 
-Modern teams are storing more of their critical knowledge in GitHub than ever before. Style guides, agent configs, sales playbooks, and persona definitions increasingly live as markdown files in repos because AI tools like Claude Code and Cursor need to read them from source.
+MDocs is a collaborative markdown editor for GitHub. Non-technical team members — marketers, content writers, PMs — can browse, edit, and publish markdown files in GitHub repos without knowing what a branch, commit, or pull request is.
 
-But the people who _own_ that content often are not engineers with experience writing markdown and using Git commands.
+Every action uses plain language. The git context is always there for those who want it — just never in the way.
 
-MDocs is built to bridge the gap between collaborative doc-editing tools like Notion and the new world (for many) of markdown and GitHub.
+## Who it's for
 
-* * *
+**Content teams on code-based websites.** Your marketing site is built in Next.js, Astro, or Remix. Blog posts, how-to guides, and changelog entries live as `.md` files in the repo. Your content team shouldn't need to touch GitHub to update them.
 
-## Supported file types
+**AI-native teams managing agent configs and GTM docs.** `CLAUDE.md` files, `cursor_rules`, brand style guides, and sales playbooks increasingly live in GitHub because AI tools need to read them from source. MDocs makes it easy for the non-engineers who own that content to keep it updated.
 
-| File Type | Example | Owner | Update Frequency |
-| --- | --- | --- | --- |
-| Agent config | CLAUDE.md | Eng lead + PM | Weekly |
-| Brand style guide | style_guide.md | Marketing | Monthly |
-| Sales playbook | playbook.md | Sales lead | Quarterly |
-| AI persona definition | persona.md | Product | As needed |
-| Onboarding doc | onboarding.md | People ops | Per hire |
+## The core workflow
 
-* * *
+1. Sign in with GitHub
+2. Browse your repo like a CMS — folder sidebar, posts listed by title, not filename
+3. Click any post to open it in a clean WYSIWYG editor
+4. Edit content and update metadata (title, date, author, tags) in a friendly sidebar form
+5. Hit **Save** or **Propose changes** — MDocs handles the commit or PR automatically
 
-## Core features
+No terminal. No git knowledge required. No separate CMS to sync.
 
-### 1\. GitHub-native editing
+## How saving works
 
-All files live in GitHub. MDocs is a **lens over your repos**, not a separate system. Nothing gets out of sync because there is only one source of truth.
+Every GitHub action shows plain language first, git context second:
 
-### 2\. WYSIWYG markdown editor
+```
+[ Save changes ]
+  Will commit directly to main
 
-Toggle between a clean visual editor and raw markdown. Supports:
+✓ Saved
+  Committed to main · just now · view on GitHub ↗
 
--   **Bold** and _italic_ text
-    
--   `Inline code` and full code blocks
-    
--   Tables, horizontal rules, and block quotes
-    
--   H1, H2, and H3 headings
-    
+[ Propose changes ]
+  Opens a pull request for review
 
-### 3\. Pull request workflow
+✓ Changes proposed
+  PR #42 open · waiting for review · view on GitHub ↗
+```
 
-For protected branches, MDocs creates a PR on your behalf. You fill in a title — we handle the branch, the commit, and the diff.
+## Tech stack
 
-### 4\. Inline comments
+- **Frontend**: Next.js (App Router), TypeScript, Tailwind CSS
+- **Editor**: TipTap v3 (ProseMirror-based WYSIWYG with markdown toggle)
+- **Auth**: NextAuth.js — GitHub OAuth for identity, GitHub App for repo access
+- **GitHub integration**: Octokit via GitHub App installation tokens
+- **Database**: PostgreSQL via Prisma (comments, collection config, starred files)
+- **AI**: Anthropic Claude API (inline editing, PR description generation)
 
-Select any passage and leave a comment for a teammate. No more Slack messages saying _"see line 47 of the style guide."_
+## Running locally
 
-* * *
+```bash
+# Install dependencies
+npm install
 
-## Save states
+# Set up environment variables
+cp .env.example .env.local
+# Fill in all values — see Environment Variables below
 
-| Status | Meaning |
-| --- | --- |
-| Unsaved changes | Edits exist locally, not yet committed |
-| Saved to draft | Stored in browser, not in GitHub |
-| Committed | Written directly to branch |
-| PR open | Changes proposed, awaiting review |
+# Push database schema to Neon (or your Postgres instance)
+npx dotenv -e .env.local -- npx prisma db push
 
-* * *
+# Start dev server
+npm run dev
+```
 
-## Getting started
+Open [http://localhost:3000](http://localhost:3000).
 
-1.  Sign in with GitHub
-    
-2.  Install the MDocs GitHub App on your org
-    
-3.  Browse to any `.md` file in your repos
-    
-4.  Start editing — no terminal required
-    
+## Environment variables
 
-* * *
+```
+GITHUB_APP_ID=
+GITHUB_APP_PRIVATE_KEY=        # Contents of your .pem file, newlines as \n
+GITHUB_APP_CLIENT_ID=
+GITHUB_APP_CLIENT_SECRET=
+GITHUB_WEBHOOK_SECRET=
+NEXTAUTH_URL=                  # http://localhost:3000 for local dev
+NEXTAUTH_SECRET=               # Any random string
+DATABASE_URL=                  # Postgres connection string (Neon recommended)
+ANTHROPIC_API_KEY=
+```
 
-## Coming soon
+## GitHub App setup
 
--   **Real-time multiplayer** — see teammates' cursors live
-    
--   **Style guide compliance check** — flag inconsistencies across files automatically
-    
--   **File relationship graph** — know when a change in one file affects another
+MDocs uses a GitHub App for all repo read/write operations. On first sign-in, users are prompted to install the app on their account or org.
+
+Required permissions:
+- `contents: read/write`
+- `pull_requests: read/write`
+- `metadata: read`
+
+Set your callback URL to `http://localhost:3000/api/auth/callback/github` for local development. Update to your production URL before deploying.
+
+## Project structure
+
+```
+/src
+  /app
+    /api
+      /auth           → NextAuth handler
+      /github         → Repo, file, commit, PR, collaborator routes
+      /comments       → Comment CRUD and replies
+      /ai             → Inline edit + PR description generation
+      /settings       → Repo settings
+      /stars          → File starring
+    /dashboard        → Repo grid + starred files
+    /repos            → File browser and editor
+    /settings         → Per-repo configuration
+  /components
+    /editor           → TipTap editor, toolbar, markdown toggle, frontmatter editor
+    /ui               → Shared UI components (Radix-based)
+  /lib
+    /github-app.ts    → GitHub App singleton + getOctokitForRepo()
+    /auth.ts          → NextAuth config
+    /markdown.ts      → Frontmatter parsing, HTML↔markdown conversion
+  /hooks
+    /useEditorState.ts → Save state machine
+/prisma
+  schema.prisma       → Data model
+```
+
+## Current status
+
+Core editing and GitHub PR flow are working. Actively building toward a full CMS-like experience:
+
+- **Content collections** — map folder paths to friendly labels, browse posts by title not filename
+- **Schema-driven frontmatter editor** — right sidebar with typed fields (date picker, tags, published toggle)
+- **New post creation flow** — "New post" button, auto-slug, draft-first workflow
+- **Image upload** — drag/paste images into editor, committed directly to repo
+
+## Contributing
+
+PRs welcome. Please read `CLAUDE.md` in the repo root before contributing — it describes the current architecture, known bugs, and what's actively being built.
+
+## License
+
+MIT
