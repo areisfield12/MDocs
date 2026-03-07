@@ -52,7 +52,7 @@ export function FrontmatterPanel({
   // No schema — fall back to the generic key-value editor
   if (!schema) {
     return (
-      <div className="w-[280px] border-l border-border bg-surface-secondary flex flex-col flex-shrink-0">
+      <div className="w-[340px] border-l border-border bg-surface-secondary flex flex-col flex-shrink-0">
         <PanelHeader
           label="Document settings"
           onCollapse={() => setCollapsed(true)}
@@ -65,7 +65,7 @@ export function FrontmatterPanel({
   }
 
   return (
-    <div className="w-[280px] border-l border-border bg-surface-secondary flex flex-col flex-shrink-0">
+    <div className="w-[340px] border-l border-border bg-surface-secondary flex flex-col flex-shrink-0">
       <PanelHeader
         label={collectionLabel ?? "Document settings"}
         onCollapse={() => setCollapsed(true)}

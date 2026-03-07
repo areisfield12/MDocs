@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SessionProvider } from "./providers";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-dm-sans",
+});
 
 export const metadata: Metadata = {
   title: "MDocs — Collaborative Markdown for GitHub Teams",
@@ -23,7 +29,9 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body
+        className={`${dmSans.className} ${dmSans.variable} ${GeistSans.variable} ${GeistMono.variable}`}
+      >
         <SessionProvider session={session}>
           {children}
           <Toaster
@@ -31,17 +39,23 @@ export default async function RootLayout({
             toastOptions={{
               duration: 4000,
               style: {
-                background: "var(--bg-tertiary)",
-                color: "var(--text-primary)",
-                borderRadius: "0.5rem",
-                fontSize: "0.875rem",
-                border: "1px solid var(--border-color)",
+                background: "var(--color-bg-emphasis)",
+                color: "var(--color-text-primary)",
+                borderRadius: "var(--radius-md)",
+                fontSize: "var(--text-sm)",
+                border: "1px solid var(--color-border-default)",
               },
               success: {
-                iconTheme: { primary: "#10b981", secondary: "var(--text-primary)" },
+                iconTheme: {
+                  primary: "var(--color-success)",
+                  secondary: "var(--color-text-primary)",
+                },
               },
               error: {
-                iconTheme: { primary: "#ef4444", secondary: "var(--text-primary)" },
+                iconTheme: {
+                  primary: "var(--color-error)",
+                  secondary: "var(--color-text-primary)",
+                },
                 duration: 6000,
               },
             }}
