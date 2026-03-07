@@ -137,7 +137,20 @@ export interface FrontmatterData {
   [key: string]: string | number | boolean | string[] | null;
 }
 
-// ─── Collections & Sidebar ──────────────────────────────────────────────
+// ─── Collection Schema ──────────────────────────────────────────────────────
+
+export type SchemaFieldType = "text" | "textarea" | "date" | "tags" | "toggle" | "select";
+
+export interface SchemaField {
+  key: string;
+  label: string;
+  type: SchemaFieldType;
+  required?: boolean;
+  default?: string | boolean | number;
+  options?: string[];
+}
+
+export type CollectionSchemaField = SchemaField;
 
 export interface Collection {
   id: string;
@@ -145,20 +158,13 @@ export interface Collection {
   repoName: string;
   label: string;
   folderPath: string;
-  schema: CollectionSchemaField[];
+  schema: SchemaField[];
   position: number;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CollectionSchemaField {
-  key: string;
-  label: string;
-  type: "text" | "textarea" | "date" | "tags" | "toggle" | "select";
-  required?: boolean;
-  default?: string | boolean | number;
-  options?: string[];
-}
+// ─── Sidebar Navigation ─────────────────────────────────────────────────────
 
 export interface FolderNode {
   path: string;
