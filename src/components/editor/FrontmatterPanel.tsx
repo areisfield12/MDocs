@@ -1,14 +1,23 @@
 "use client";
 
-import { useState, useCallback, type KeyboardEvent } from "react";
+import { useState, useCallback } from "react";
 import {
   Settings,
   ChevronRight,
-  ChevronLeft,
-  X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { FrontmatterEditor } from "./FrontmatterEditor";
+import {
+  TextInput,
+  TextareaInput,
+  DateInput,
+  TagsInput,
+  ToggleInput,
+  SelectInput,
+  inputClass,
+  asString,
+  asStringArray,
+  asBool,
+} from "./FrontmatterFields";
 import type { FrontmatterData, SchemaField } from "@/types";
 
 interface FrontmatterPanelProps {
@@ -200,213 +209,8 @@ function SchemaFieldInput({
   }
 }
 
-// ─── Field Components ───────────────────────────────────────────────────────
-
-const inputClass = cn(
-  "w-full text-sm px-2.5 py-1.5 rounded border border-border bg-surface",
-  "text-fg placeholder:text-fg-tertiary",
-  "focus:outline-none focus:ring-1 focus:ring-violet-500/40 focus:border-violet-500/40",
-  "transition-colors"
-);
-
-function TextInput({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <input
-      type="text"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className={inputClass}
-    />
-  );
-}
-
-function TextareaInput({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <textarea
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      rows={3}
-      className={cn(inputClass, "resize-y min-h-[60px]")}
-    />
-  );
-}
-
-function DateInput({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  // Normalize to YYYY-MM-DD for the native input
-  const normalized = value ? value.substring(0, 10) : "";
-
-  return (
-    <input
-      type="date"
-      value={normalized}
-      onChange={(e) => onChange(e.target.value)}
-      className={cn(inputClass, "appearance-none")}
-    />
-  );
-}
-
-function TagsInput({
-  value,
-  onChange,
-}: {
-  value: string[];
-  onChange: (v: string[]) => void;
-}) {
-  const [draft, setDraft] = useState("");
-
-  const addTag = useCallback(
-    (tag: string) => {
-      const trimmed = tag.trim();
-      if (trimmed && !value.includes(trimmed)) {
-        onChange([...value, trimmed]);
-      }
-      setDraft("");
-    },
-    [value, onChange]
-  );
-
-  const removeTag = useCallback(
-    (idx: number) => {
-      onChange(value.filter((_, i) => i !== idx));
-    },
-    [value, onChange]
-  );
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if ((e.key === "Enter" || e.key === ",") && draft.trim()) {
-      e.preventDefault();
-      addTag(draft);
-    }
-    if (e.key === "Backspace" && !draft && value.length > 0) {
-      removeTag(value.length - 1);
-    }
-  };
-
-  return (
-    <div>
-      {value.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-1.5">
-          {value.map((tag, idx) => (
-            <span
-              key={`${tag}-${idx}`}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 text-xs"
-            >
-              {tag}
-              <button
-                onClick={() => removeTag(idx)}
-                className="hover:text-violet-300 transition-colors"
-                aria-label={`Remove ${tag}`}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-      <input
-        type="text"
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onKeyDown={handleKeyDown}
-        onBlur={() => {
-          if (draft.trim()) addTag(draft);
-        }}
-        placeholder="Type and press Enter"
-        className={inputClass}
-      />
-    </div>
-  );
-}
-
-function ToggleInput({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs font-medium text-fg-secondary">{label}</span>
-      <button
-        role="switch"
-        aria-checked={value}
-        onClick={() => onChange(!value)}
-        className={cn(
-          "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
-          value ? "bg-violet-500" : "bg-border"
-        )}
-      >
-        <span
-          className={cn(
-            "inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform",
-            value ? "translate-x-[18px]" : "translate-x-[3px]"
-          )}
-        />
-      </button>
-      <span
-        className={cn(
-          "text-xs ml-2",
-          value ? "text-green-400" : "text-fg-tertiary"
-        )}
-      >
-        {value ? "Published" : "Draft"}
-      </span>
-    </div>
-  );
-}
-
-function SelectInput({
-  value,
-  options,
-  onChange,
-}: {
-  value: string;
-  options: string[];
-  onChange: (v: string) => void;
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className={cn(inputClass, "appearance-none cursor-pointer")}
-    >
-      <option value="">Select...</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-  );
-}
-
 // ─── Extra Fields ───────────────────────────────────────────────────────────
 
-/**
- * Shows frontmatter keys that exist in the file but aren't in the schema.
- * Renders them as simple text inputs so data isn't silently lost.
- */
 function ExtraFields({
   data,
   schema,
@@ -441,27 +245,4 @@ function ExtraFields({
       ))}
     </div>
   );
-}
-
-// ─── Type coercion helpers ──────────────────────────────────────────────────
-
-function asString(v: string | number | boolean | string[] | null): string {
-  if (v === null || v === undefined) return "";
-  if (Array.isArray(v)) return v.join(", ");
-  return String(v);
-}
-
-function asStringArray(
-  v: string | number | boolean | string[] | null
-): string[] {
-  if (Array.isArray(v)) return v;
-  if (typeof v === "string" && v)
-    return v.split(",").map((s) => s.trim()).filter(Boolean);
-  return [];
-}
-
-function asBool(v: string | number | boolean | string[] | null): boolean {
-  if (typeof v === "boolean") return v;
-  if (v === "true") return true;
-  return false;
 }

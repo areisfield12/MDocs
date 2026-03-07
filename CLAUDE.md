@@ -42,6 +42,7 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 - **Editor**: TipTap v3.20.0 with StarterKit, Underline, Link, Placeholder, Table, CodeBlockLowlight, CharacterCount (installed but unused)
 - **Markdown pipeline**: `gray-matter` strips frontmatter on load → TipTap gets HTML only → `matter.stringify()` re-prepends YAML on save. Lives in `src/lib/markdown.ts`.
 - **Save state**: Managed in `src/hooks/useEditorState.ts` with states: `clean → unsaved → saving → saved → clean` (also `error` and `pr-open`)
+- **Frontmatter panel**: Three-file architecture in `src/components/editor/`: `FrontmatterPanel.tsx` (right sidebar wrapper, routes schema vs no-schema), `FrontmatterEditor.tsx` (no-schema fallback with auto-detected field types), `FrontmatterFields.tsx` (shared field components: TextInput, AutoResizeTextInput, DateInput, TagsInput, ToggleInput, SelectInput, plus type coercion helpers and `detectFieldType`). All field components use design system tokens from `src/styles/tokens.css` — never hardcoded Tailwind color classes like `violet-*`.
 - **Key files**: `src/lib/github-app.ts`, `src/lib/auth.ts`, `src/lib/markdown.ts`, `src/hooks/useEditorState.ts`, `src/components/editor/`, `src/app/dashboard/DashboardClient.tsx`, `src/app/repos/[owner]/[repo]/RepoBrowserClient.tsx`
 
 ### What is working
@@ -50,7 +51,7 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 - Dashboard: grid of repo cards with search, last updated, privacy icon, starred files section
 - Repo file browser: hierarchical folder tree via `FileTree.tsx`, filters to `.md`/`.mdx`, shows file category icons (agent/style/gtm/doc), last commit time, star button
 - TipTap WYSIWYG editor loading file content from GitHub, with markdown toggle (WYSIWYG ↔ raw via Turndown + remark)
-- Frontmatter stripped on load, re-prepended on save — currently rendered as a generic key-value UI via `FrontmatterEditor.tsx`
+- Frontmatter stripped on load, re-prepended on save — rendered via `FrontmatterPanel.tsx` right sidebar. Two modes: (1) schema-driven when a collection schema exists (proper labeled fields from schema definition), (2) no-schema fallback via `FrontmatterEditor.tsx` with auto-detected field types (`published` → toggle, `date`/`*_date`/`*_at` → date picker, `tags`/`categories` → tag pills, `title` → auto-resize textarea, long content → textarea, else → text input). Field keys shown as humanized labels (not editable inputs). "Add field" button lets power users create new keys.
 - Direct commit save flow (`POST /api/github/[owner]/[repo]/commit`)
 - PR creation flow: creates branch `mdocs/{username}/{filename}` → commits → opens PR → requests reviewers (`POST /api/github/[owner]/[repo]/pr`)
 - AI inline editing via Claude Sonnet streaming (`POST /api/ai/edit`)
@@ -71,7 +72,7 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 ### Not yet built (priority order)
 
 1. Content collections + Webflow-style sidebar navigation — **data layer and API routes done** (Collection model, CRUD routes, folder tree endpoint, collection files endpoint). Frontend sidebar/list UI not yet built.
-2. Schema-driven frontmatter editor (right sidebar panel with proper field types) — **schema storage done** (JSON schema field on Collection model). Frontend form UI not yet built.
+2. ~~Schema-driven frontmatter editor (right sidebar panel with proper field types)~~ — **Done.** `FrontmatterPanel.tsx` renders schema-driven fields when a collection schema exists, falls back to auto-detected field types via `FrontmatterEditor.tsx`. Shared field components in `FrontmatterFields.tsx`. All styled with design system tokens.
 3. New post creation flow
 4. Image upload and insertion
 5. Shareable draft preview link
@@ -293,6 +294,7 @@ Collection {
 - All database queries go through Prisma client — import from `src/lib/prisma.ts` or equivalent
 - API routes live in `/app/api/` using Next.js App Router route handlers
 - Components use Tailwind for styling — no inline styles, no CSS modules
+- Use design system color tokens from `src/styles/tokens.css` (mapped via `@theme` in `globals.css`). Use `bg-accent`, `text-accent`, `text-success`, `border-accent-border`, etc. — never hardcoded Tailwind palette colors like `violet-500`, `purple-400`, `green-400`, `indigo-*` for UI chrome. Hardcoded palette colors are only acceptable for one-off semantic uses (e.g. red for destructive actions)
 - Use `zod` for all API request validation
 - Error boundaries around all editor and GitHub API surfaces
 - When extending the TipTap editor, use `editor.chain().focus()` command API — never `document.execCommand()`
