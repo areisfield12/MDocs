@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import { LandingNav } from "@/components/landing/LandingNav";
+import { ConnectButton } from "@/components/landing/ConnectButton";
 import { FolderOpen, PenLine, GitCommitHorizontal } from "lucide-react";
 
 export default async function LandingPage() {
@@ -53,13 +54,10 @@ export default async function LandingPage() {
                 Go to dashboard &rarr;
               </Link>
             ) : (
-              <a
-                href="/api/auth/signin/github?callbackUrl=/dashboard"
+              <ConnectButton
                 className="btn-primary text-base font-medium"
                 style={{ height: 44, paddingLeft: 24, paddingRight: 24 }}
-              >
-                Connect your GitHub repo &rarr;
-              </a>
+              />
             )}
           </div>
 
@@ -362,13 +360,10 @@ export default async function LandingPage() {
                 Go to dashboard &rarr;
               </Link>
             ) : (
-              <a
-                href="/api/auth/signin/github?callbackUrl=/dashboard"
+              <ConnectButton
                 className="btn-primary text-base font-medium"
                 style={{ height: 44, paddingLeft: 24, paddingRight: 24 }}
-              >
-                Connect your GitHub repo &rarr;
-              </a>
+              />
             )}
           </div>
 
