@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, FileText } from "lucide-react";
 import { MillerColumnsContainer } from "@/components/miller/MillerColumnsContainer";
 import { MillerBreadcrumb } from "@/components/miller/MillerBreadcrumb";
@@ -21,6 +21,9 @@ export function RepoBrowserClient({
   repo,
 }: RepoBrowserClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialFolder = searchParams.get("folder");
+  const hasAppliedInitialFolder = useRef(false);
 
   // Data state
   const [folders, setFolders] = useState<FolderNode[]>([]);
@@ -160,6 +163,42 @@ export function RepoBrowserClient({
     },
     [selectedPath, findFolderNode, foldersWithMarkdown, foldersWithDirectFiles]
   );
+
+  // Expand Miller columns to deep-linked folder from query param
+  useEffect(() => {
+    if (loading || !initialFolder || hasAppliedInitialFolder.current) return;
+    hasAppliedInitialFolder.current = true;
+
+    const parts = initialFolder.split("/");
+    const pathEntries: string[] = [];
+    for (let i = 1; i <= parts.length; i++) {
+      pathEntries.push(parts.slice(0, i).join("/"));
+    }
+
+    const validPath: string[] = [];
+    for (const entry of pathEntries) {
+      if (findFolderNode(entry)) {
+        validPath.push(entry);
+      } else {
+        break;
+      }
+    }
+
+    if (validPath.length === 0) return;
+
+    setSelectedPath(validPath);
+
+    const deepestFolder = validPath[validPath.length - 1];
+    const node = findFolderNode(deepestFolder);
+    const hasSubfoldersWithMd =
+      node !== null &&
+      node.children.some((c) => foldersWithMarkdown.has(c.path));
+    const hasDirectFiles = foldersWithDirectFiles.has(deepestFolder);
+
+    if (!hasSubfoldersWithMd && hasDirectFiles) {
+      setActiveListFolder(deepestFolder);
+    }
+  }, [loading, initialFolder, findFolderNode, foldersWithMarkdown, foldersWithDirectFiles]);
 
   if (loading) {
     return (
