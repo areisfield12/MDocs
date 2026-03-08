@@ -458,16 +458,20 @@ export function EditorPageClient({
                 onLinkPopoverOpenChange={setIsLinkPopoverOpen}
               />
             ) : (
-              <textarea
-                value={rawDraft}
-                onChange={(e) => {
-                  setRawDraft(e.target.value);
-                  editorState.markUnsaved();
-                }}
-                className="w-full h-full resize-none font-mono text-sm px-16 py-12 focus:outline-none bg-surface text-fg"
-                placeholder="Write markdown here..."
-                spellCheck={false}
-              />
+              <div className="h-full overflow-y-auto">
+                <div className="editor-body">
+                  <textarea
+                    value={rawDraft}
+                    onChange={(e) => {
+                      setRawDraft(e.target.value);
+                      editorState.markUnsaved();
+                    }}
+                    className="w-full resize-none font-mono text-sm focus:outline-none bg-surface text-fg min-h-[calc(100vh-200px)]"
+                    placeholder="Write markdown here..."
+                    spellCheck={false}
+                  />
+                </div>
+              </div>
             )}
 
             {/* First-upload hint */}
@@ -940,7 +944,7 @@ function EditorWithRef({
     },
     editorProps: {
       attributes: {
-        class: "prose prose-gray dark:prose-invert max-w-none focus:outline-none min-h-full px-16 py-12",
+        class: "prose prose-gray dark:prose-invert max-w-none focus:outline-none",
       },
       handleDrop: (_view: unknown, event: DragEvent) => {
         const files = event.dataTransfer?.files;
@@ -1016,9 +1020,17 @@ function EditorWithRef({
   const scrollRef = useRef<HTMLDivElement>(null);
   const TableControls = require("@/components/editor/table/TableControls").TableControls;
 
+  const handleGutterClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === scrollRef.current && editor) {
+      editor.commands.focus("end");
+    }
+  }, [editor]);
+
   return (
-    <div ref={scrollRef} className="h-full overflow-y-auto relative">
-      <EditorContent editor={editor} />
+    <div ref={scrollRef} className="h-full overflow-y-auto relative" onClick={handleGutterClick}>
+      <div className="editor-body">
+        <EditorContent editor={editor} />
+      </div>
       {editor && (
         <TableControls editor={editor} scrollContainerRef={scrollRef} />
       )}
