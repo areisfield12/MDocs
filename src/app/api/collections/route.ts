@@ -105,10 +105,17 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const collections = await prisma.collection.findMany({
-    where: { repoOwner: owner, repoName: repo },
-    orderBy: { position: "asc" },
-  });
-
-  return NextResponse.json({ collections });
+  try {
+    const collections = await prisma.collection.findMany({
+      where: { repoOwner: owner, repoName: repo },
+      orderBy: { position: "asc" },
+    });
+    return NextResponse.json({ collections });
+  } catch (error) {
+    console.error("Failed to fetch collections:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch collections", actionable: "Please try again.", collections: [] },
+      { status: 500 }
+    );
+  }
 }
