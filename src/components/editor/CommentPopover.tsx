@@ -13,7 +13,7 @@ interface CommentPopoverProps {
   charStart: number;
   charEnd: number;
   quotedText: string;
-  onCommentAdded: () => void;
+  onCommentAdded: (commentId: string) => void;
 }
 
 export function CommentPopover({
@@ -80,7 +80,7 @@ export function CommentPopover({
       toast.success("Comment added");
       setBody("");
       setOpen(false);
-      onCommentAdded();
+      onCommentAdded(data.comment.id);
     } catch {
       toast.error("Failed to add comment. Check your connection.");
     } finally {

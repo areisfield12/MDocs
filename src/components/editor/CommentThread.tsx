@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, CheckCircle, MessageSquare, Send } from "lucide-react";
+import { Check, MessageSquare, Send } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 import { CommentWithAuthor } from "@/types";
@@ -13,8 +13,8 @@ interface CommentThreadProps {
   onResolve: (commentId: string) => Promise<void>;
   onReply: (commentId: string, body: string) => Promise<boolean>;
   onRefresh: () => void;
-  onClose: () => void;
   highlightedCommentId?: string | null;
+  newlyAddedCommentId?: string | null;
 }
 
 export function CommentThread({
@@ -22,12 +22,13 @@ export function CommentThread({
   onResolve,
   onReply,
   onRefresh,
-  onClose,
   highlightedCommentId,
+  newlyAddedCommentId,
 }: CommentThreadProps) {
-
   const activeComments = comments.filter((c) => !c.resolved);
   const resolvedComments = comments.filter((c) => c.resolved);
+  const [showResolved, setShowResolved] = useState(false);
+  const [flashId, setFlashId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!highlightedCommentId) return;
@@ -35,101 +36,92 @@ export function CommentThread({
     if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [highlightedCommentId]);
 
+  useEffect(() => {
+    if (newlyAddedCommentId) {
+      setFlashId(newlyAddedCommentId);
+      const timer = setTimeout(() => setFlashId(null), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [newlyAddedCommentId]);
+
+  if (comments.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 text-center">
+        <MessageSquare className="h-5 w-5 text-fg-tertiary mb-2" />
+        <p className="text-sm text-fg-secondary">No comments yet</p>
+        <p className="text-xs text-fg-tertiary mt-1">
+          Select text to leave a comment
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full flex flex-col bg-surface">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4 text-fg-tertiary" />
-          <span className="text-sm font-semibold text-fg">Comments</span>
-          {activeComments.length > 0 && (
-            <span className="bg-violet-500/10 text-violet-500 text-xs font-medium px-1.5 py-0.5 rounded-full">
-              {activeComments.length}
-            </span>
+    <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
+      {activeComments.map((comment) => (
+        <CommentCard
+          key={comment.id}
+          comment={comment}
+          highlighted={comment.id === highlightedCommentId}
+          flashing={comment.id === flashId}
+          onResolve={() => onResolve(comment.id)}
+          onReply={async (body) => {
+            const ok = await onReply(comment.id, body);
+            if (ok) onRefresh();
+          }}
+        />
+      ))}
+
+      {resolvedComments.length > 0 && (
+        <div className="pt-2">
+          <button
+            onClick={() => setShowResolved(!showResolved)}
+            className="text-xs text-fg-tertiary flex items-center gap-1 cursor-pointer"
+          >
+            <span>{showResolved ? "\u25BE" : "\u25B8"}</span>
+            {resolvedComments.length} resolved comment
+            {resolvedComments.length !== 1 ? "s" : ""}
+          </button>
+          {showResolved && (
+            <div className="mt-2 space-y-2 opacity-50">
+              {resolvedComments.map((comment) => (
+                <CommentCard
+                  key={comment.id}
+                  comment={comment}
+                  resolved
+                  highlighted={comment.id === highlightedCommentId}
+                  onResolve={() => onResolve(comment.id)}
+                  onReply={async (body) => {
+                    const ok = await onReply(comment.id, body);
+                    if (ok) onRefresh();
+                  }}
+                />
+              ))}
+            </div>
           )}
         </div>
-        <button
-          onClick={onClose}
-          className="p-1 text-fg-tertiary hover:text-fg-secondary transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Comment list */}
-      <div className="flex-1 overflow-y-auto divide-y divide-border-secondary">
-        {comments.length === 0 ? (
-          <div className="text-center py-12 px-4">
-            <MessageSquare className="h-8 w-8 text-fg-tertiary mx-auto mb-2" />
-            <p className="text-sm text-fg-secondary">No comments yet</p>
-            <p className="text-xs text-fg-tertiary mt-1">
-              Select text in the editor and click &ldquo;Comment&rdquo;
-            </p>
-          </div>
-        ) : (
-          <>
-            {activeComments.map((comment) => (
-              <CommentCard
-                key={comment.id}
-                comment={comment}
-                highlighted={comment.id === highlightedCommentId}
-                onResolve={() => onResolve(comment.id)}
-                onReply={async (body) => {
-                  const ok = await onReply(comment.id, body);
-                  if (ok) onRefresh();
-                }}
-              />
-            ))}
-            {resolvedComments.length > 0 && (
-              <>
-                <div className="px-4 py-2 bg-surface-secondary">
-                  <span className="text-xs font-semibold text-fg-tertiary uppercase tracking-wide">
-                    Resolved ({resolvedComments.length})
-                  </span>
-                </div>
-                {resolvedComments.map((comment) => (
-                  <CommentCard
-                    key={comment.id}
-                    comment={comment}
-                    resolved
-                    highlighted={comment.id === highlightedCommentId}
-                    onResolve={() => onResolve(comment.id)}
-                    onReply={async (body) => {
-                      const ok = await onReply(comment.id, body);
-                      if (ok) onRefresh();
-                    }}
-                  />
-                ))}
-              </>
-            )}
-          </>
-        )}
-      </div>
+      )}
     </div>
   );
 }
 
 interface CommentCardProps {
-  comment: {
-    id: string;
-    body: string;
-    resolved: boolean;
-    createdAt: string;
-    author: { id: string; name: string | null; image: string | null; githubLogin: string | null };
-    replies: Array<{
-      id: string;
-      body: string;
-      createdAt: string;
-      author: { id: string; name: string | null; image: string | null; githubLogin: string | null };
-    }>;
-  };
+  comment: CommentWithAuthor;
   resolved?: boolean;
   highlighted?: boolean;
+  flashing?: boolean;
   onResolve: () => void;
   onReply: (body: string) => Promise<void>;
 }
 
-function CommentCard({ comment, resolved, highlighted, onResolve, onReply }: CommentCardProps) {
+function CommentCard({
+  comment,
+  resolved,
+  highlighted,
+  flashing,
+  onResolve,
+  onReply,
+}: CommentCardProps) {
   const [replyText, setReplyText] = useState("");
   const [showReply, setShowReply] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -147,42 +139,53 @@ function CommentCard({ comment, resolved, highlighted, onResolve, onReply }: Com
     <div
       id={`comment-${comment.id}`}
       className={cn(
-        "px-4 py-3 transition-colors",
-        resolved && "opacity-60",
-        highlighted && "bg-amber-500/5 ring-1 ring-inset ring-amber-500/20"
+        "bg-surface-secondary border border-border dark:border-border-secondary rounded-md p-3 transition-colors duration-500",
+        highlighted && "ring-1 ring-inset ring-amber-500/20",
+        flashing && "!bg-accent-subtle"
       )}
     >
-      {/* Author + timestamp */}
-      <div className="flex items-center gap-2 mb-2">
+      {/* Anchor quote */}
+      {comment.quotedText && (
+        <div className="block bg-bg-muted border-l-2 border-border-strong rounded-r-sm text-xs italic text-fg-tertiary mb-2 px-2 py-1 truncate">
+          {comment.quotedText}
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-1">
         <UserAvatar
           name={comment.author.name ?? comment.author.githubLogin ?? "User"}
           image={comment.author.image}
         />
-        <div>
-          <span className="text-xs font-medium text-fg">
-            {comment.author.githubLogin ?? comment.author.name ?? "User"}
+        <span className="text-sm font-medium text-fg">
+          {comment.author.githubLogin ?? comment.author.name ?? "User"}
+        </span>
+        <span className="ml-auto text-xs text-fg-tertiary">
+          {formatRelativeTime(comment.createdAt)}
+        </span>
+        {resolved ? (
+          <span className="text-xs text-fg-tertiary bg-surface-tertiary px-1.5 py-0.5 rounded">
+            Resolved
           </span>
-          <span className="text-xs text-fg-tertiary ml-2">
-            {formatRelativeTime(comment.createdAt)}
-          </span>
-        </div>
-        {!resolved && (
+        ) : (
           <button
             onClick={onResolve}
-            className="ml-auto p-1 text-fg-tertiary hover:text-green-500 transition-colors"
-            title="Resolve comment"
+            className="text-fg-tertiary hover:text-success transition-colors cursor-pointer"
+            title="Resolve"
           >
-            <CheckCircle className="h-4 w-4" />
+            <Check className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
 
       {/* Body */}
-      <p className="text-sm text-fg-secondary leading-relaxed">{comment.body}</p>
+      <p className="text-sm text-fg-secondary" style={{ lineHeight: 1.6 }}>
+        {comment.body}
+      </p>
 
       {/* Replies */}
       {comment.replies.map((reply) => (
-        <div key={reply.id} className="mt-3 pl-3 border-l-2 border-border-secondary">
+        <div key={reply.id} className="mt-2 pl-4">
           <div className="flex items-center gap-2 mb-1">
             <UserAvatar
               name={reply.author.name ?? reply.author.githubLogin ?? "User"}
@@ -196,7 +199,9 @@ function CommentCard({ comment, resolved, highlighted, onResolve, onReply }: Com
               {formatRelativeTime(reply.createdAt)}
             </span>
           </div>
-          <p className="text-xs text-fg-secondary leading-relaxed pl-6">{reply.body}</p>
+          <p className="text-xs text-fg-secondary pl-5" style={{ lineHeight: 1.6 }}>
+            {reply.body}
+          </p>
         </div>
       ))}
 
@@ -204,7 +209,7 @@ function CommentCard({ comment, resolved, highlighted, onResolve, onReply }: Com
       {!resolved && (
         <div className="mt-2">
           {showReply ? (
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-1">
               <input
                 type="text"
                 value={replyText}
@@ -229,7 +234,7 @@ function CommentCard({ comment, resolved, highlighted, onResolve, onReply }: Com
           ) : (
             <button
               onClick={() => setShowReply(true)}
-              className="text-xs text-violet-500 hover:text-violet-400 mt-1 transition-colors"
+              className="text-xs text-accent mt-1 cursor-pointer transition-colors"
             >
               Reply
             </button>
@@ -249,7 +254,7 @@ function UserAvatar({
   image: string | null;
   small?: boolean;
 }) {
-  const size = small ? 18 : 22;
+  const size = small ? 18 : 20;
   if (image) {
     return (
       <Image
@@ -264,8 +269,8 @@ function UserAvatar({
   return (
     <div
       className={cn(
-        "rounded-full bg-violet-500 flex items-center justify-center text-white font-bold flex-shrink-0",
-        small ? "w-[18px] h-[18px] text-[9px]" : "w-[22px] h-[22px] text-[10px]"
+        "rounded-full bg-accent flex items-center justify-center text-white font-bold flex-shrink-0",
+        small ? "w-[18px] h-[18px] text-[9px]" : "w-[20px] h-[20px] text-[10px]"
       )}
     >
       {name[0].toUpperCase()}
