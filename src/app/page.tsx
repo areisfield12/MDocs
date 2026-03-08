@@ -54,7 +54,7 @@ export default async function LandingPage() {
               </Link>
             ) : (
               <a
-                href="/api/auth/signin"
+                href="/api/auth/signin/github?callbackUrl=/dashboard"
                 className="btn-primary text-base font-medium"
                 style={{ height: 44, paddingLeft: 24, paddingRight: 24 }}
               >
@@ -363,7 +363,7 @@ export default async function LandingPage() {
               </Link>
             ) : (
               <a
-                href="/api/auth/signin"
+                href="/api/auth/signin/github?callbackUrl=/dashboard"
                 className="btn-primary text-base font-medium"
                 style={{ height: 44, paddingLeft: 24, paddingRight: 24 }}
               >
