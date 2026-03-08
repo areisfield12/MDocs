@@ -136,14 +136,17 @@ model StarredFile {
 // ─── Repo Settings ─────────────────────────────────────────────────────────
 
 model RepoSettings {
-  id                String   @id @default(cuid())
-  repoOwner         String
-  repoName          String
-  defaultBranch     String   @default("main")
-  requirePR         Boolean  @default(false)
-  protectedBranches String[]
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  repoOwner          String
+  repoName           String
+  defaultBranch      String   @default("main")
+  requirePR          Boolean  @default(false)
+  protectedBranches  String[]
+  imageStorageFolder String   @default("public/images")
+  imageUrlPrefix     String   @default("/images")
+  organizeByFolder   Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@unique([repoOwner, repoName])
 }

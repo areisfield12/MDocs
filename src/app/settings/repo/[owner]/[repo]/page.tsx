@@ -31,6 +31,9 @@ export default async function RepoSettingsPage({ params }: RepoSettingsPageProps
           defaultBranch: settings?.defaultBranch ?? "main",
           requirePR: settings?.requirePR ?? false,
           protectedBranches: settings?.protectedBranches ?? [],
+          imageStorageFolder: settings?.imageStorageFolder ?? "public/images",
+          imageUrlPrefix: settings?.imageUrlPrefix ?? "/images",
+          organizeByFolder: settings?.organizeByFolder ?? false,
         }}
       />
     </AppShell>

@@ -61,7 +61,7 @@ export default async function SettingsPage() {
               read and write files. Install the GitHub App to get started.
             </p>
             <a
-              href={`https://github.com/apps/mdocs/installations/new`}
+              href={`https://github.com/apps/mdocs-editor/installations/new`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 bg-fg text-fg-inverted rounded-md text-[13px] font-medium hover:bg-fg/90 transition-colors"
@@ -69,6 +69,14 @@ export default async function SettingsPage() {
               <Github className="h-4 w-4" />
               Manage GitHub App installations
             </a>
+          </section>
+
+          <section className="bg-surface border border-border rounded-lg p-6 mb-4">
+            <h2 className="text-base font-semibold text-fg mb-2">Repository settings</h2>
+            <p className="text-sm text-fg-tertiary">
+              Each repository has its own settings — default branch, pull request requirements, and image storage.
+              Access them by hovering a repo in the sidebar and clicking the gear icon that appears.
+            </p>
           </section>
 
           <section className="bg-surface border border-border rounded-lg p-6">

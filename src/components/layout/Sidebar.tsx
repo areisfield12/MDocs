@@ -60,7 +60,7 @@ export function Sidebar({
             href={href}
             className={cn(
               "flex items-center gap-2.5 px-2.5 py-[7px] rounded-md text-[13px] transition-colors",
-              pathname === href || pathname.startsWith(href + "/")
+              pathname === href || (pathname.startsWith(href + "/") && !pathname.startsWith("/settings/repo/"))
                 ? "bg-surface-active text-fg font-medium"
                 : "text-fg-tertiary hover:bg-row-hover hover:text-text-primary"
             )}
@@ -101,14 +101,11 @@ export function Sidebar({
                 currentRepoName === repo.name;
 
               return (
-                <button
+                <div
                   key={repo.fullName}
-                  onClick={() => router.push(`/repos/${repo.owner}/${repo.name}`)}
                   className={cn(
-                    "w-full flex items-center text-left cursor-pointer transition-colors relative",
-                    isActive
-                      ? "bg-surface-emphasis"
-                      : "hover:bg-row-hover"
+                    "group relative flex items-center transition-colors",
+                    isActive ? "bg-surface-emphasis" : "hover:bg-row-hover"
                   )}
                   style={{ height: "52px", padding: "0 12px" }}
                 >
@@ -117,15 +114,31 @@ export function Sidebar({
                     <div className="absolute left-0 top-2 bottom-2 w-[2px] rounded-full bg-accent" />
                   )}
 
-                  <div className="min-w-0 flex-1 pl-1">
+                  <button
+                    onClick={() => router.push(`/repos/${repo.owner}/${repo.name}`)}
+                    className="min-w-0 flex-1 pl-1 text-left cursor-pointer"
+                  >
                     <div className="text-[13px] font-medium text-fg truncate">
                       {repo.name}
                     </div>
                     <div className="text-[11px] text-fg-tertiary truncate mt-0.5">
                       {repo.defaultBranch} · {formatUpdatedAt(repo.updatedAt)}
                     </div>
-                  </div>
-                </button>
+                  </button>
+
+                  <Link
+                    href={`/settings/repo/${repo.owner}/${repo.name}`}
+                    onClick={(e) => e.stopPropagation()}
+                    title="Repository settings"
+                    className={cn(
+                      "flex-shrink-0 h-6 w-6 flex items-center justify-center rounded transition-colors ml-1",
+                      "text-fg-tertiary hover:text-fg hover:bg-surface-tertiary",
+                      isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    )}
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               );
             })}
           </div>
@@ -134,7 +147,7 @@ export function Sidebar({
         {/* Connect repo link */}
         <div className="px-2 py-2">
           <a
-            href="https://github.com/apps/mdocs/installations/new"
+            href="https://github.com/apps/mdocs-editor/installations/new"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] text-fg-tertiary hover:bg-bg-muted hover:text-text-primary transition-colors"

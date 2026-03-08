@@ -11,6 +11,8 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import Underline from "@tiptap/extension-underline";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { EditorImage } from "./EditorImage";
+import { ImageUploadPlaceholder } from "./ImageUploadPlaceholder";
 import { createLowlight } from "lowlight";
 import javascript from "highlight.js/lib/languages/javascript";
 import typescript from "highlight.js/lib/languages/typescript";
@@ -66,6 +68,12 @@ export function Editor({
       TableCell,
       TableHeader,
       CodeBlockLowlight.configure({ lowlight }),
+      EditorImage.configure({
+        inline: false,
+        allowBase64: false,
+        HTMLAttributes: { class: "editor-image" },
+      }),
+      ImageUploadPlaceholder,
     ],
     content: initialHtml,
     editable: !readOnly,

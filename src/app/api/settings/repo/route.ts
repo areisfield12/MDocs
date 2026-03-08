@@ -10,6 +10,9 @@ const SettingsSchema = z.object({
   defaultBranch: z.string().default("main"),
   requirePR: z.boolean().default(false),
   protectedBranches: z.array(z.string()).default([]),
+  imageStorageFolder: z.string().default("public/images"),
+  imageUrlPrefix: z.string().default("/images"),
+  organizeByFolder: z.boolean().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -30,7 +33,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid settings", actionable: "Check your input and try again." }, { status: 400 });
   }
 
-  const { owner, repo, defaultBranch, requirePR, protectedBranches } = parsed.data;
+  const { owner, repo, defaultBranch, requirePR, protectedBranches, imageStorageFolder, imageUrlPrefix, organizeByFolder } = parsed.data;
+
+  // Strip leading slash from storage folder if present
+  const sanitizedStorageFolder = imageStorageFolder.replace(/^\/+/, "");
 
   const settings = await prisma.repoSettings.upsert({
     where: { repoOwner_repoName: { repoOwner: owner, repoName: repo } },
@@ -40,8 +46,11 @@ export async function POST(request: NextRequest) {
       defaultBranch,
       requirePR,
       protectedBranches,
+      imageStorageFolder: sanitizedStorageFolder,
+      imageUrlPrefix,
+      organizeByFolder,
     },
-    update: { defaultBranch, requirePR, protectedBranches },
+    update: { defaultBranch, requirePR, protectedBranches, imageStorageFolder: sanitizedStorageFolder, imageUrlPrefix, organizeByFolder },
   });
 
   return NextResponse.json({ settings });

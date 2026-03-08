@@ -13,6 +13,7 @@ import {
   Code2,
   Link2,
   Table,
+  ImageIcon,
   Minus,
   Undo,
   Redo,
@@ -25,6 +26,7 @@ interface ToolbarProps {
   editor: Editor | null;
   onAIEdit?: () => void;
   hasSelection?: boolean;
+  onImageUpload?: () => void;
 }
 
 interface ToolbarButtonProps {
@@ -81,7 +83,7 @@ function Divider() {
   return <div className="w-px h-5 bg-border mx-1" />;
 }
 
-export function Toolbar({ editor, onAIEdit, hasSelection }: ToolbarProps) {
+export function Toolbar({ editor, onAIEdit, hasSelection, onImageUpload }: ToolbarProps) {
   if (!editor) return null;
 
   const addLink = () => {
@@ -205,6 +207,11 @@ export function Toolbar({ editor, onAIEdit, hasSelection }: ToolbarProps) {
       <ToolbarButton onClick={addTable} label="Insert table">
         <Table className="h-4 w-4" />
       </ToolbarButton>
+      {onImageUpload && (
+        <ToolbarButton onClick={onImageUpload} label="Insert image">
+          <ImageIcon className="h-4 w-4" />
+        </ToolbarButton>
+      )}
       <ToolbarButton
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
         label="Horizontal rule"
