@@ -9,6 +9,8 @@ interface UseGitHubFileOptions {
   repo: string;
   path: string;
   branch?: string;
+  imageStorageFolder?: string;
+  imageUrlPrefix?: string;
 }
 
 interface UseGitHubFileResult {
@@ -28,11 +30,57 @@ interface UseGitHubFileResult {
   reload: () => void;
 }
 
+/**
+ * Rewrite relative image src attributes in HTML to GitHub raw URLs so images
+ * stored in the repo (uploaded via MDocs) render correctly in the editor when
+ * opening a file from a previous session.
+ *
+ * Also sets `data-markdown-src` on each rewritten img to the original relative
+ * path, so Turndown's mdocsImage rule produces the correct markdown on save.
+ */
+function rewriteRelativeImageSrcs(
+  html: string,
+  owner: string,
+  repo: string,
+  branch: string,
+  imageStorageFolder: string,
+  imageUrlPrefix: string
+): string {
+  if (!html || typeof window === "undefined") return html;
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
+  const imgs = doc.querySelectorAll("img");
+
+  imgs.forEach((img) => {
+    const src = img.getAttribute("src");
+    // Only rewrite relative paths that start with imageUrlPrefix and haven't
+    // already been rewritten (no data-markdown-src means this is a fresh load).
+    if (!src || !src.startsWith(imageUrlPrefix) || img.getAttribute("data-markdown-src")) {
+      return;
+    }
+
+    // Strip imageUrlPrefix prefix, prepend imageStorageFolder to get the repo path.
+    // e.g. "/images/photo.jpg" → "public/images/photo.jpg"
+    const relativePart = src.slice(imageUrlPrefix.length);
+    const repoPath = `${imageStorageFolder}${relativePart}`;
+    // Proxy through our API so it works for both public and private repos.
+    const proxyUrl = `/api/github/${owner}/${repo}/image?path=${encodeURIComponent(repoPath)}&ref=${encodeURIComponent(branch)}`;
+
+    img.setAttribute("data-markdown-src", src);
+    img.setAttribute("src", proxyUrl);
+  });
+
+  return doc.body.innerHTML;
+}
+
 export function useGitHubFile({
   owner,
   repo,
   path,
   branch,
+  imageStorageFolder = "public/images",
+  imageUrlPrefix = "/images",
 }: UseGitHubFileOptions): UseGitHubFileResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,13 +119,21 @@ export function useGitHubFile({
 
         // Parse frontmatter and convert body to HTML
         const prepared = await prepareFileForEditor(data.content);
-        setBodyHtml(prepared.bodyHtml);
+        const rewrittenHtml = rewriteRelativeImageSrcs(
+          prepared.bodyHtml,
+          owner,
+          repo,
+          branch ?? "main",
+          imageStorageFolder,
+          imageUrlPrefix
+        );
+        setBodyHtml(rewrittenHtml);
         setFrontmatterData(prepared.frontmatterData);
         setHasFrontmatter(prepared.hasFrontmatter);
       })
       .catch(() => setError("Failed to load file. Check your connection."))
       .finally(() => setLoading(false));
-  }, [owner, repo, path, branch, reloadKey]);
+  }, [owner, repo, path, branch, reloadKey, imageStorageFolder, imageUrlPrefix]);
 
   const getCurrentRaw = useCallback((): string => {
     return buildRawMarkdown(frontmatterData, bodyHtml);
