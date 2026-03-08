@@ -1,9 +1,7 @@
 "use client";
 
-import { Check, Clock, AlertCircle, Loader2, GitPullRequest } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { SaveStatus } from "@/types";
-import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
 
 interface SaveIndicatorProps {
   status: SaveStatus;
@@ -20,78 +18,54 @@ export function SaveIndicator({
   onSave,
   onProposeChanges,
 }: SaveIndicatorProps) {
-  if (status === "clean") return null;
+  // Determine save button state
+  const isIdle = status === "clean" || status === "saved";
+  const isSaving = status === "saving";
+  const isUnsaved = status === "unsaved" || status === "error";
+  const isPROpen = status === "pr-open";
 
   return (
-    <div className="flex items-center gap-3">
-      {/* Status badge */}
-      <div
-        className={cn(
-          "flex items-center gap-1.5 text-sm px-3 py-1 rounded-full",
-          status === "unsaved" && "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-          status === "saving" && "bg-surface-tertiary text-fg-secondary",
-          status === "saved" && "bg-green-500/10 text-green-600 dark:text-green-400",
-          status === "error" && "bg-red-500/10 text-red-600 dark:text-red-400",
-          status === "pr-open" && "bg-violet-500/10 text-violet-600 dark:text-violet-400"
-        )}
-      >
-        {status === "unsaved" && (
-          <>
-            <Clock className="h-3.5 w-3.5" />
-            <span>Unsaved changes</span>
-          </>
-        )}
-        {status === "saving" && (
-          <>
+    <div className="flex items-center gap-2">
+      {/* Save button — always visible, morphs through states */}
+      {onSave && (
+        <button
+          onClick={isUnsaved ? onSave : undefined}
+          disabled={isSaving}
+          className={
+            isUnsaved
+              ? "btn-primary"
+              : isSaving
+                ? "btn-primary opacity-70 cursor-default"
+                : "btn-ghost cursor-default"
+          }
+          style={!isUnsaved && !isSaving ? { pointerEvents: "none" } : undefined}
+        >
+          {isSaving ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            <span>Saving...</span>
-          </>
-        )}
-        {status === "saved" && (
-          <>
+          ) : isIdle ? (
             <Check className="h-3.5 w-3.5" />
-            <span>Saved to GitHub</span>
-          </>
-        )}
-        {status === "error" && (
-          <>
-            <AlertCircle className="h-3.5 w-3.5" />
-            <span>Save failed</span>
-          </>
-        )}
-        {status === "pr-open" && prNumber && (
-          <>
-            <GitPullRequest className="h-3.5 w-3.5" />
-            {prUrl ? (
-              <a
-                href={prUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:underline"
-              >
-                PR #{prNumber} open for review
-              </a>
-            ) : (
-              <span>PR #{prNumber} open for review</span>
-            )}
-          </>
-        )}
-      </div>
+          ) : null}
+          {isSaving ? "Saving..." : isUnsaved ? "Save" : "Saved"}
+        </button>
+      )}
 
-      {/* Action buttons */}
-      {(status === "unsaved" || status === "error") && (
-        <div className="flex items-center gap-2">
-          {onSave && (
-            <Button size="sm" onClick={onSave}>
-              Save
-            </Button>
-          )}
-          {onProposeChanges && (
-            <Button size="sm" variant="secondary" onClick={onProposeChanges}>
-              Propose changes
-            </Button>
-          )}
-        </div>
+      {/* Propose changes button — always visible when handler provided */}
+      {onProposeChanges && !isPROpen && (
+        <button
+          onClick={onProposeChanges}
+          disabled={isSaving}
+          className="btn-secondary"
+        >
+          Propose changes
+        </button>
+      )}
+
+      {/* PR open state */}
+      {isPROpen && prNumber && (
+        <span className="btn-ghost cursor-default" style={{ pointerEvents: "none" }}>
+          <Check className="h-3.5 w-3.5" />
+          PR created
+        </span>
       )}
     </div>
   );

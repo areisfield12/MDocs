@@ -7,6 +7,7 @@ import { Editor } from "@/components/editor/Editor";
 import { Toolbar } from "@/components/editor/Toolbar";
 import { MarkdownToggle } from "@/components/editor/MarkdownToggle";
 import { FrontmatterPanel } from "@/components/editor/FrontmatterPanel";
+import { SaveConfirmationBar } from "@/components/editor/SaveConfirmationBar";
 import { AIEditModal } from "@/components/editor/AIEditModal";
 import { CommentPopover } from "@/components/editor/CommentPopover";
 import { CommentThread } from "@/components/editor/CommentThread";
@@ -129,8 +130,7 @@ export function EditorPageClient({
         return null;
       }
 
-      toast.success("Saved to GitHub");
-      // Reload to get new SHA
+      // Reload to get new SHA (confirmation bar replaces toast)
       reload();
       return { sha: data.sha };
     },
@@ -192,17 +192,12 @@ export function EditorPageClient({
     []
   );
 
-  // Open AI edit with current selection
+  // Open AI edit with current selection (uses TipTap state, not window.getSelection)
   const handleAIEdit = useCallback(() => {
-    if (!selection.hasSelection) return;
-    // Extract selected text from editor
-    const div = document.querySelector(".tiptap");
-    const sel = window.getSelection();
-    if (sel && sel.toString()) {
-      setSelectedText(sel.toString());
-      setShowAIModal(true);
-    }
-  }, [selection.hasSelection]);
+    if (!selection.hasSelection || !selection.text) return;
+    setSelectedText(selection.text);
+    setShowAIModal(true);
+  }, [selection.hasSelection, selection.text]);
 
   // Accept AI suggestion — replace selected text in editor
   const handleAIAccept = useCallback(
@@ -226,6 +221,54 @@ export function EditorPageClient({
   const handleProposeChanges = useCallback(() => {
     setShowPRModal(true);
   }, []);
+
+  // Confirmation bar state
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationType, setConfirmationType] = useState<"save" | "pr">("save");
+  const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const dismissConfirmation = useCallback(() => {
+    setShowConfirmation(false);
+    if (confirmTimerRef.current) {
+      clearTimeout(confirmTimerRef.current);
+      confirmTimerRef.current = null;
+    }
+  }, []);
+
+  // Track status transitions for confirmation bar
+  const prevStatusRef = useRef(editorState.status);
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    const curr = editorState.status;
+    prevStatusRef.current = curr;
+
+    if (prev !== curr) {
+      if (curr === "saved") {
+        setConfirmationType("save");
+        setShowConfirmation(true);
+      } else if (curr === "pr-open") {
+        setConfirmationType("pr");
+        setShowConfirmation(true);
+      } else if (curr === "unsaved" && showConfirmation) {
+        // User made a new edit while confirmation is showing — dismiss it
+        dismissConfirmation();
+      }
+    }
+  }, [editorState.status, showConfirmation, dismissConfirmation]);
+
+  // Cmd+S / Ctrl+S keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        if (editorState.status === "unsaved" || editorState.status === "error") {
+          handleSave();
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [editorState.status, handleSave]);
 
   if (loading) {
     return (
@@ -269,6 +312,19 @@ export function EditorPageClient({
       onProposeChanges={handleProposeChanges}
     >
       <div className="h-full flex flex-col bg-surface">
+        {/* Post-save confirmation bar */}
+        <SaveConfirmationBar
+          visible={showConfirmation}
+          variant={confirmationType}
+          branch={branch}
+          owner={owner}
+          repo={repo}
+          filePath={filePath}
+          prNumber={editorState.prNumber}
+          prUrl={editorState.prUrl}
+          onDismiss={dismissConfirmation}
+        />
+
         {/* Toolbar row */}
         <div className="flex items-center border-b border-border">
           <div className="flex-1">
