@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { ConnectButton } from "@/components/landing/ConnectButton";
-import { FolderOpen, PenLine, GitCommitHorizontal } from "lucide-react";
+import { FolderOpen, PenLine, GitCommitHorizontal, Check } from "lucide-react";
 
 export default async function LandingPage() {
   const session = await getServerSession(authOptions);
@@ -21,19 +21,12 @@ export default async function LandingPage() {
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
             {/* Left: Copy */}
             <div className="flex-1 text-center lg:text-left">
-              {/* Badge */}
-              <div className="inline-flex items-center bg-bg-emphasis border border-border-default text-text-secondary text-xs rounded-full px-4 py-2">
-                Built for teams using Claude Code, Cursor, and Next.js
-              </div>
-
               {/* Headline */}
               <h1
-                className="font-display font-bold text-text-primary text-4xl lg:text-5xl mt-6"
+                className="font-display font-bold text-text-primary text-4xl lg:text-5xl"
                 style={{ lineHeight: 1.15 }}
               >
-                Your website moved to code.
-                <br />
-                Your content team got left behind.
+                An editor for websites that live in code.
               </h1>
 
               {/* Subheadline */}
@@ -41,8 +34,7 @@ export default async function LandingPage() {
                 className="text-lg text-text-secondary mt-5"
                 style={{ maxWidth: 480, lineHeight: 1.6 }}
               >
-                Commit gives your content team a real editor for the markdown files
-                living in your GitHub repo — without pulling them into your codebase.
+                Your content lives in GitHub. Commit makes content teams feel like it never left your CMS.
               </p>
 
               {/* CTA Button */}
@@ -65,17 +57,21 @@ export default async function LandingPage() {
 
               {/* Below CTA */}
               <p className="text-sm text-text-tertiary mt-4">
-                Free to start · No credit card · Your files stay in GitHub
+                Free to start · Maintains GitHub as your source-of-truth
               </p>
 
-              {/* Terminal line */}
-              <div className="mt-5">
-                <div
-                  className="inline-block bg-bg-subtle border border-border-default rounded-md font-mono text-sm text-text-secondary"
-                  style={{ padding: "var(--space-2) var(--space-4)" }}
-                >
-                  Saved · Committed to main · view on GitHub ↗
-                </div>
+              {/* Feature checkmarks */}
+              <div className="mt-6 flex flex-col gap-2 items-center lg:items-start">
+                {[
+                  "Add and edit docs in seconds",
+                  "Zero terminal workflows required",
+                  "Fully GitHub integrated",
+                ].map((feature) => (
+                  <div key={feature} className="flex items-center gap-2">
+                    <Check size={15} strokeWidth={2.5} className="text-success shrink-0" />
+                    <span className="text-sm text-text-secondary">{feature}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
