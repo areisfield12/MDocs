@@ -38,7 +38,7 @@ export default async function LandingPage() {
             className="text-lg text-text-secondary mt-6 mx-auto"
             style={{ maxWidth: 560, lineHeight: 1.6 }}
           >
-            MDocs gives your content team a real editor for the markdown files
+            Commit gives your content team a real editor for the markdown files
             living in your GitHub repo — without pulling them into your codebase.
           </p>
 
@@ -159,7 +159,7 @@ export default async function LandingPage() {
           </div>
 
           <p className="text-xl text-text-primary font-semibold text-center mt-10">
-            MDocs fixes both sides of this problem.
+            Commit fixes both sides of this problem.
           </p>
         </div>
       </section>
@@ -182,7 +182,7 @@ export default async function LandingPage() {
             className="text-base text-text-secondary text-center mx-auto mt-6"
             style={{ maxWidth: 560, lineHeight: 1.7 }}
           >
-            MDocs connects directly to your GitHub repo and gives your content
+            Commit connects directly to your GitHub repo and gives your content
             team a CMS-like interface for the markdown files already living
             there. Nothing moves. Nothing syncs. GitHub stays the source of
             truth.
@@ -297,7 +297,7 @@ export default async function LandingPage() {
                   migration.
                 </p>
                 <p>
-                  MDocs gives them back their workflow — browse, edit, publish —
+                  Commit gives them back their workflow — browse, edit, publish —
                   without touching the codebase.
                 </p>
               </div>
@@ -324,7 +324,7 @@ export default async function LandingPage() {
                   that&apos;s where they belong.
                 </p>
                 <p>
-                  MDocs makes them collaborative. Your whole team can edit the
+                  Commit makes them collaborative. Your whole team can edit the
                   files that govern how your AI behaves — without a developer in
                   the loop.
                 </p>
@@ -381,7 +381,7 @@ export default async function LandingPage() {
 
       {/* Section 8 — Footer */}
       <footer className="flex items-center justify-between px-8 py-8 text-sm text-text-tertiary border-t border-border-subtle">
-        <span>&copy; 2026 MDocs</span>
+        <span>&copy; 2026 Commit</span>
         <span>Built for GitHub · Not affiliated with GitHub, Inc.</span>
       </footer>
     </main>

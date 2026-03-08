@@ -40,7 +40,7 @@ export function MDocsLogo({ size = 44, className, variant = "dark" }: MDocsWordm
         )}
         style={{ fontSize: size * 0.72 }}
       >
-        MDocs
+        Commit
       </span>
     </div>
   );

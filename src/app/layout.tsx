@@ -15,7 +15,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "MDocs — Collaborative Markdown for GitHub Teams",
+  title: "Commit — Collaborative Markdown for GitHub Teams",
   description:
     "Edit markdown files that live in GitHub with a Google Docs experience — WYSIWYG editing, PR workflows, and AI-assisted authoring.",
 };

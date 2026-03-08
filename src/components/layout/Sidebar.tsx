@@ -48,7 +48,7 @@ export function Sidebar({
       <div className="h-14 px-3 flex items-center">
         <Link href="/dashboard" className="flex items-center gap-2.5">
           <MDocsMark size={22} />
-          <span className="text-[15px] font-bold text-fg tracking-[-0.01em]">MDocs</span>
+          <span className="text-[15px] font-bold text-fg tracking-[-0.01em]">Commit</span>
         </Link>
       </div>
 
