@@ -36,6 +36,20 @@
 
   --color-brand:          var(--color-brand);
 
+  /* ─── Semantic aliases (used by components as bg-surface, text-fg, etc.) ─── */
+  --color-surface:           var(--color-bg-base);
+  --color-surface-secondary: var(--color-bg-subtle);
+  --color-surface-tertiary:  var(--color-bg-muted);
+  --color-surface-hover:     var(--color-bg-emphasis);
+
+  --color-fg:           var(--color-text-primary);
+  --color-fg-secondary: var(--color-text-secondary);
+  --color-fg-tertiary:  var(--color-text-tertiary);
+  --color-fg-inverted:  var(--color-text-inverse);
+
+  --color-border:           var(--color-border-default);
+  --color-border-secondary: var(--color-border-subtle);
+
   /* ─── Typography ─── */
   --font-display:  var(--font-display);
   --font-ui:       var(--font-ui);

@@ -64,9 +64,11 @@ export function EditorPageClient({
   const [currentHtml, setCurrentHtml] = useState(bodyHtml);
   const [currentFrontmatter, setCurrentFrontmatter] = useState<FrontmatterData>(frontmatterData);
 
-  // Update local state when file loads
+  // Update local state when file loads. Use `sha` as the readiness signal
+  // instead of `bodyHtml` — new files with only frontmatter have an empty
+  // body, so bodyHtml is "" (falsy) and would block initialization forever.
   const initialized = useRef(false);
-  if (!initialized.current && !loading && bodyHtml) {
+  if (!initialized.current && !loading && sha) {
     initialized.current = true;
     setCurrentHtml(bodyHtml);
     setCurrentFrontmatter(frontmatterData);
@@ -349,6 +351,7 @@ export function EditorPageClient({
               onChange={handleFrontmatterChange}
               schema={collectionSchema}
               collectionLabel={collectionLabel}
+              loading={loading}
             />
           )}
         </div>

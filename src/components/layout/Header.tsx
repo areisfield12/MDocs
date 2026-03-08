@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, Settings } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, Settings, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -19,6 +19,8 @@ interface HeaderProps {
   onSave?: () => void;
   onProposeChanges?: () => void;
   filePath?: string;
+  repoOwner?: string;
+  repoName?: string;
 }
 
 export function Header({
@@ -30,6 +32,8 @@ export function Header({
   onSave,
   onProposeChanges,
   filePath,
+  repoOwner,
+  repoName,
 }: HeaderProps) {
   const { data: session } = useSession();
 
@@ -49,9 +53,22 @@ export function Header({
         </button>
 
         {filePath && (
-          <span className="text-[13px] text-fg-tertiary truncate max-w-xs font-mono">
-            {filePath}
-          </span>
+          <>
+            <span className="text-[13px] text-fg-tertiary truncate max-w-xs font-mono">
+              {filePath}
+            </span>
+            {repoOwner && repoName && (
+              <a
+                href={`https://github.com/${repoOwner}/${repoName}/blob/main/${filePath}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="View file on GitHub"
+                className="ml-2 text-fg-tertiary hover:text-fg-secondary transition-colors duration-100 flex-shrink-0"
+              >
+                <ExternalLink className="h-3 w-3" strokeWidth={1.5} />
+              </a>
+            )}
+          </>
         )}
       </div>
 

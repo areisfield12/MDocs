@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Loader2, Plus, Search, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Collection, CollectionFile } from "@/types";
+import { NewFileModal } from "@/components/repo/NewFileModal";
 import toast from "react-hot-toast";
 
 interface FileListPanelProps {
@@ -24,6 +25,7 @@ export function FileListPanel({
   const [files, setFiles] = useState<CollectionFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showNewFileModal, setShowNewFileModal] = useState(false);
 
   const label = collection?.label ?? folderPath.split("/").pop() ?? folderPath;
 
@@ -70,9 +72,8 @@ export function FileListPanel({
           </p>
         </div>
         <button
-          disabled
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-fg text-surface text-[13px] font-medium opacity-50 cursor-not-allowed"
-          title="Coming soon"
+          onClick={() => setShowNewFileModal(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-fg text-fg-inverted text-[13px] font-medium hover:bg-fg/90 transition-colors"
         >
           <Plus className="h-3.5 w-3.5" />
           New file
@@ -140,6 +141,15 @@ export function FileListPanel({
           </>
         )}
       </div>
+
+      <NewFileModal
+        open={showNewFileModal}
+        onOpenChange={setShowNewFileModal}
+        owner={owner}
+        repo={repo}
+        folderPath={folderPath}
+        onFileCreated={onSelectFile}
+      />
     </div>
   );
 }
