@@ -12,7 +12,7 @@ MDocs is a collaborative markdown editor that connects to GitHub. The north star
 
 Think: Webflow CMS or Contentful, but the files actually live in the GitHub repo. No sync. No separate CMS database. GitHub is always the source of truth.
 
-The navigation model is **Webflow CMS**: a left sidebar shows a navigable folder hierarchy. Users browse into folders naturally. Files are shown by their frontmatter title, not their filename. The underlying repo structure is visible as navigation — but never as raw path strings.
+The navigation model is **Webflow CMS / Finder hybrid**: a Miller columns browser (horizontal cascading columns) lets users drill into folders left-to-right. When a folder contains only files, the rightmost column expands into a full row-based file list with Title, Status, Date, Author, and Modified columns. Files are shown by their frontmatter title, not their filename. A breadcrumb bar tracks the current path. The left sidebar shows global nav (Starred, Settings) and a REPOSITORIES section — there is no separate dashboard page.
 
 ---
 
@@ -43,15 +43,26 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 - **Markdown pipeline**: `gray-matter` strips frontmatter on load → TipTap gets HTML only → `matter.stringify()` re-prepends YAML on save. Lives in `src/lib/markdown.ts`.
 - **Save state**: Managed in `src/hooks/useEditorState.ts` with states: `clean → unsaved → saving → saved → clean` (also `error` and `pr-open`)
 - **Frontmatter panel**: Three-file architecture in `src/components/editor/`: `FrontmatterPanel.tsx` (right sidebar wrapper, routes schema vs no-schema), `FrontmatterEditor.tsx` (no-schema fallback with auto-detected field types), `FrontmatterFields.tsx` (shared field components: TextInput, AutoResizeTextInput, DateInput, TagsInput, ToggleInput, SelectInput, plus type coercion helpers and `detectFieldType`). All field components use design system tokens from `src/styles/tokens.css` — never hardcoded Tailwind color classes like `violet-*`.
-- **Key files**: `src/lib/github-app.ts`, `src/lib/auth.ts`, `src/lib/markdown.ts`, `src/hooks/useEditorState.ts`, `src/components/editor/`, `src/app/dashboard/DashboardClient.tsx`, `src/app/repos/[owner]/[repo]/RepoBrowserClient.tsx`
+- **Navigation**: Miller columns browser replaced the old sidebar folder tree. Left sidebar shows global nav + repo list (no separate dashboard page). `src/app/repos/[owner]/[repo]/RepoBrowserClient.tsx` renders the Miller columns layout.
+- **Design system**: `src/styles/tokens.css` and `design-system.md` define color system, type scale (Geist + DM Sans + Geist Mono), spacing, border radius, shadow, and animation tokens.
+- **Key files**: `src/lib/github-app.ts`, `src/lib/auth.ts`, `src/lib/markdown.ts`, `src/hooks/useEditorState.ts`, `src/components/editor/`, `src/app/repos/[owner]/[repo]/RepoBrowserClient.tsx`
 
 ### What is working
 
 - GitHub OAuth sign-in via NextAuth + GitHub App installation flow
-- Dashboard: grid of repo cards with search, last updated, privacy icon, starred files section
-- Repo file browser: hierarchical folder tree via `FileTree.tsx`, filters to `.md`/`.mdx`, shows file category icons (agent/style/gtm/doc), last commit time, star button
+- **Miller columns navigation** — Webflow/Finder-style horizontal column browser replaced the old sidebar folder tree. Each folder click opens a new column to the right. When a folder contains only files, the rightmost column expands into a full file list view. Breadcrumb bar tracks current path.
+- **Integrated sidebar** — left sidebar shows global nav (Starred, Settings) + REPOSITORIES section listing all connected repos with branch and last-updated metadata. Clicking a repo loads its folder tree in the Miller columns area. The old separate dashboard page with repo card grid is gone — the repo list IS the dashboard.
+- **File list view** — row-based CMS-style list with Title, Published/Draft status pills, formatted dates, author names, relative modified timestamps, search, and "+ New file" button. Empty author shows em dash fallback.
+- **New file creation flow** — "+ New file" opens a modal with title input, live slug preview (date-prefixed, e.g. `2026-03-07-my-title.md`), and creates the file in GitHub via `POST /api/github/[owner]/[repo]/new-file` with pre-populated frontmatter template. On success shows "File created · view on GitHub" toast and navigates directly to editor.
+- **Schema-driven frontmatter panel** — right sidebar with typed fields: title (auto-resizing textarea), date (date picker, timezone-safe display), author (text input), tags (pill input with add/remove), published (toggle showing Published/Draft), description (textarea). All fields sync in real time. Falls back to auto-detected field types when no schema exists.
+- **Document title display** — frontmatter title displays as a prominent read-only label between the topbar and formatting toolbar, always visible while editing.
+- **Save flow UX** — four-state Save button (Saved/unsaved/saving/saved). Post-save confirmation bar slides in below topbar: "Saved · Committed to main · just now · view on GitHub" in green, auto-dismisses after 4 seconds. Cmd+S keyboard shortcut wired.
+- **GitHub file link** — subtle ExternalLink icon next to file path in editor topbar, opens raw file on github.com in new tab.
+- **Clickable breadcrumbs** — breadcrumb segments in editor topbar are clickable and navigate back to the correct Miller columns folder level. Replaced the standalone back button. Unsaved changes guard fires on navigation away.
+- **Hover and cursor states** — global `cursor:pointer` and smooth 100ms transitions applied to all interactive elements. Hover backgrounds use `rgba` values for visibility in both light and dark mode.
+- **Design system** — `tokens.css` and `design-system.md` with full color system, type scale, spacing system, border radius, shadow, animation tokens, and component language.
+- **Landing page** — redesigned with new messaging strategy. Hero, two-column problem section, three feature blocks, two use case cards, CTA footer.
 - TipTap WYSIWYG editor loading file content from GitHub, with markdown toggle (WYSIWYG ↔ raw via Turndown + remark)
-- Frontmatter stripped on load, re-prepended on save — rendered via `FrontmatterPanel.tsx` right sidebar. Two modes: (1) schema-driven when a collection schema exists (proper labeled fields from schema definition), (2) no-schema fallback via `FrontmatterEditor.tsx` with auto-detected field types (`published` → toggle, `date`/`*_date`/`*_at` → date picker, `tags`/`categories` → tag pills, `title` → auto-resize textarea, long content → textarea, else → text input). Field keys shown as humanized labels (not editable inputs). "Add field" button lets power users create new keys.
 - Direct commit save flow (`POST /api/github/[owner]/[repo]/commit`)
 - PR creation flow: creates branch `mdocs/{username}/{filename}` → commits → opens PR → requests reviewers (`POST /api/github/[owner]/[repo]/pr`)
 - AI inline editing via Claude Sonnet streaming (`POST /api/ai/edit`)
@@ -67,16 +78,19 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 | ~~AI text insertion uses deprecated `document.execCommand("insertText")`~~ | ~~`EditorPageClient.tsx:200-209`~~ | ~~Fixed — now uses `editor.chain().focus().insertContent()`~~ |
 | `EditorWithRef` duplicates editor config using `require()` calls, missing CodeBlockLowlight | Line 433 | Refactor to share single editor config, add CodeBlockLowlight to this instance |
 | Selection uses `window.getSelection()` instead of TipTap state | `EditorPageClient.tsx` | Use `editor.state.selection` instead |
-| No Cmd+S keyboard shortcut | Editor | Add `useEffect` keydown listener that calls save handler |
+| ~~No Cmd+S keyboard shortcut~~ | ~~Editor~~ | ~~Fixed — `useEffect` keydown listener calls save handler~~ |
+| "Unsaved changes" shows on newly created files before any edits | Editor | New files should start in `clean` state after creation |
+| AI text insertion fix (`execCommand` → `editor.chain()`) | `EditorPageClient.tsx` | Verify this landed — may still be using deprecated API |
 
 ### Not yet built (priority order)
 
-1. Content collections + Webflow-style sidebar navigation — **data layer and API routes done** (Collection model, CRUD routes, folder tree endpoint, collection files endpoint). Frontend sidebar/list UI not yet built.
+1. ~~Content collections + Webflow-style sidebar navigation~~ — **Done.** Miller columns browser with integrated sidebar, file list view, breadcrumb navigation, all shipped.
 2. ~~Schema-driven frontmatter editor (right sidebar panel with proper field types)~~ — **Done.** `FrontmatterPanel.tsx` renders schema-driven fields when a collection schema exists, falls back to auto-detected field types via `FrontmatterEditor.tsx`. Shared field components in `FrontmatterFields.tsx`. All styled with design system tokens.
-3. New post creation flow
+3. ~~New post creation flow~~ — **Done.** "+ New file" modal with title input, live slug preview, date-prefixed filename, pre-populated frontmatter, commits to GitHub and navigates to editor.
 4. Image upload and insertion
 5. Shareable draft preview link
 6. Real-time multiplayer (Yjs) — deprioritized, build last
+7. Folder cache / lazy loading — deferred
 
 ### Existing API routes (do not duplicate)
 
@@ -86,6 +100,7 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 | `/api/github/repos` | GET | List repos where App is installed |
 | `/api/github/[owner]/[repo]/files` | GET | List markdown files (recursive tree) |
 | `/api/github/[owner]/[repo]/file` | GET | Get single file content + last commit |
+| `/api/github/[owner]/[repo]/new-file` | POST | Create new file with pre-populated frontmatter |
 | `/api/github/[owner]/[repo]/commit` | POST | Direct commit to branch |
 | `/api/github/[owner]/[repo]/pr` | POST | Create PR |
 | `/api/github/[owner]/[repo]/prs` | GET | List MDocs-created PRs |
@@ -126,100 +141,21 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 
 ## What to build next — detailed specs
 
-### 1. Content Collections & Sidebar Navigation
+### ~~1. Content Collections & Sidebar Navigation~~ — SHIPPED
 
-**What it is:** A Webflow CMS-style left sidebar that lets users navigate the repo folder hierarchy and see files as friendly, titled rows — never as raw file paths.
-
-**Navigation model:**
-- Left sidebar shows the repo's folder structure as a navigable tree
-- Folder names are shown as-is (they're usually human-readable: `/blog`, `/docs`, `/guides`)
-- Clicking a folder expands it and shows its contents
-- Clicking a markdown file opens it in the editor
-- Files are always labeled by their frontmatter `title` field when available; filename is the fallback
-- File extensions (`.md`, `.mdx`) are never shown
-- Full file paths are never shown as the primary label — a small gray breadcrumb at the top of the editor is acceptable for context, but optional
-
-**Two tiers of folders:**
-
-*Labeled collections* (configured by repo admin):
-- Admin maps a folder path to a friendly label: `/content/blog` → "Blog Posts"
-- Labeled collections appear at the top of the sidebar with their friendly name and a post count
-- Clicking a labeled collection shows a row-based list view (like Webflow CMS): title, date, author, published status pill
-- Labeled collections have a defined frontmatter schema (see frontmatter section)
-
-*Unlabeled folders* (no config required):
-- All other folders in the repo appear below labeled collections as a standard folder tree
-- Show folder name as-is, files by frontmatter title or filename fallback
-- Use a generic key-value frontmatter editor (no schema required)
-- This means MDocs works immediately for any repo, even before an admin configures anything
-
-**Config storage:** Store collection config in Postgres in a `Collection` table:
-```
-Collection {
-  id, repoOwner, repoName, label, folderPath, schema (JSON), createdAt
-}
-```
-
-**Setup UI:** In `/settings/repo/[owner]/[repo]`, add a "Collections" section where admins can:
-- Add a collection: pick a label ("Blog Posts") and a folder path (`/content/blog`)
-- Define the frontmatter schema for that collection (see frontmatter section below)
-- Reorder or delete collections
-
-**Row-based list view (for labeled collections):**
-- Columns: Title, Published date, Author, Status (Published / Draft pill), Last modified
-- Sorted by date descending by default
-- Search/filter within the collection
-- "New post" button prominent in top right (see New Post Creation Flow below)
+Miller columns navigation, integrated sidebar with repo list, file list view with status/date/author columns, clickable breadcrumbs. See "What is working" above.
 
 ---
 
-### 2. Frontmatter Editor
+### ~~2. Frontmatter Editor~~ — SHIPPED
 
-**What it is:** A schema-driven form that replaces raw YAML frontmatter editing. Non-technical users see labeled fields, not `---` blocks.
-
-**Schema definition:** Each collection has a JSON schema stored in Postgres. Example:
-```json
-[
-  { "key": "title", "label": "Title", "type": "text", "required": true },
-  { "key": "date", "label": "Publish Date", "type": "date", "required": true },
-  { "key": "author", "label": "Author", "type": "text" },
-  { "key": "tags", "label": "Tags", "type": "tags" },
-  { "key": "description", "label": "SEO Description", "type": "textarea" },
-  { "key": "published", "label": "Published", "type": "toggle", "default": false }
-]
-```
-
-**Field types to support:** `text`, `textarea`, `date` (date picker), `tags` (multi-value tag input), `toggle` (published/draft boolean), `select` (dropdown with options)
-
-**UI placement:** Render the frontmatter form in a right sidebar panel in the editor view, not inline above the document body. The editor should be full-width document area on the left, frontmatter panel on the right (collapsible).
-
-**Behavior:** Editing any frontmatter field updates the in-memory document state. On save/PR creation, frontmatter is serialized back to YAML and prepended to the markdown content before committing.
-
-**Fallback:** If a file has frontmatter but no collection schema is defined, render a generic key-value editor (current behavior is fine as fallback).
+Schema-driven right sidebar panel with typed fields. Falls back to auto-detected field types. See "What is working" above.
 
 ---
 
-### 3. New Post Creation Flow
+### ~~3. New Post Creation Flow~~ — SHIPPED
 
-**What it is:** A "New post" button that creates a new markdown file in the collection folder with pre-populated frontmatter.
-
-**UI:** In the collection view, a prominent "New post" button. Clicking it opens a modal:
-- Title field (required)
-- Publish date (defaults to today)
-- Author (defaults to current user's GitHub name)
-- Published toggle (defaults to false / draft)
-
-**File creation logic:**
-- Auto-generate filename from title: lowercase, spaces to hyphens, strip special chars, append `.md`
-- Example: "How to Write a CLAUDE.md" → `how-to-write-a-claude-md.md`
-- Place file in the collection's folder path
-- Pre-populate frontmatter from the modal inputs
-- Open the editor immediately after creation
-- Do NOT commit to GitHub yet — treat as a new unsaved draft until the user hits Save
-
-**Edge cases:**
-- If filename already exists, append `-2`, `-3` etc.
-- Validate title is not empty before allowing creation
+"+ New file" modal with title input, live slug preview, date-prefixed filename, pre-populated frontmatter. Commits to GitHub and navigates to editor. See "What is working" above.
 
 ---
 
@@ -273,6 +209,15 @@ Collection {
 4. **Errors must suggest a fix** — never show raw API errors to users. Translate GitHub API errors into plain English with a suggested action.
 
 5. **The editor is the primary surface** — don't clutter it with chrome. Sidebar panels should be collapsible.
+
+---
+
+## Important architectural context
+
+- **The left sidebar file list is permanently removed** — do not re-add it. Navigation is Miller columns only.
+- **The dashboard route now renders the integrated sidebar + Miller layout**, not a separate repo card grid. There is no standalone dashboard page.
+- **All frontmatter date display uses UTC-safe parsing** to avoid timezone shift bugs (dates displaying as previous day).
+- **New file creation commits to GitHub immediately** via `POST /api/github/[owner]/[repo]/new-file` — it does not create a local-only draft.
 
 ---
 
