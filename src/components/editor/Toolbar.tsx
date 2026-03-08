@@ -27,6 +27,7 @@ interface ToolbarProps {
   onAIEdit?: () => void;
   hasSelection?: boolean;
   onImageUpload?: () => void;
+  onLinkClick?: () => void;
 }
 
 interface ToolbarButtonProps {
@@ -83,19 +84,8 @@ function Divider() {
   return <div className="w-px h-5 bg-border mx-1" />;
 }
 
-export function Toolbar({ editor, onAIEdit, hasSelection, onImageUpload }: ToolbarProps) {
+export function Toolbar({ editor, onAIEdit, hasSelection, onImageUpload, onLinkClick }: ToolbarProps) {
   if (!editor) return null;
-
-  const addLink = () => {
-    const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("Enter URL", previousUrl);
-    if (url === null) return;
-    if (url === "") {
-      editor.chain().focus().unsetLink().run();
-      return;
-    }
-    editor.chain().focus().setLink({ href: url }).run();
-  };
 
   const addTable = () => {
     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
@@ -198,9 +188,9 @@ export function Toolbar({ editor, onAIEdit, hasSelection, onImageUpload }: Toolb
         <Code2 className="h-4 w-4" />
       </ToolbarButton>
       <ToolbarButton
-        onClick={addLink}
+        onClick={() => onLinkClick?.()}
         active={editor.isActive("link")}
-        label="Add link"
+        label="Link (⌘K)"
       >
         <Link2 className="h-4 w-4" />
       </ToolbarButton>

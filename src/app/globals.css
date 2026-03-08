@@ -200,6 +200,8 @@
   pointer-events: none;
 }
 
+/* No table drag CSS needed — highlights are rendered as React overlay divs */
+
 /* Comment highlight */
 .comment-highlight {
   background-color: var(--color-accent-subtle);
@@ -242,6 +244,19 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Link styles in editor */
+.editor-link {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  text-underline-offset: 2px;
+  cursor: pointer;
+  transition: text-decoration-color 100ms ease;
+}
+.editor-link:hover {
+  text-decoration-color: var(--color-accent);
 }
 
 /* Code block styles */
