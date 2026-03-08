@@ -36,6 +36,13 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 
 ## Current state of the app (as of March 2026)
 
+### Infrastructure
+
+- **Deployed to Vercel** at `m-docs-omega.vercel.app`
+- `NEXTAUTH_URL` is set to `https://m-docs-omega.vercel.app`
+- `postinstall` script runs `prisma generate` on every Vercel build (ensures client is generated before app starts)
+- **Database migrations**: use `db push` (not `migrate dev`) for schema changes in this project
+
 ### Architecture overview
 
 - **Auth**: Hybrid NextAuth GitHub OAuth + GitHub App. JWT session stores `id`, `githubLogin`, `githubId`, `avatarUrl`. All GitHub API write calls use the GitHub App installation token via `getOctokitForRepo(owner)` in `src/lib/github-app.ts` — never the user's OAuth token. OAuth tokens are stored in the `Account` table but never read (dead code, do not use them).
@@ -57,6 +64,7 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 - **Schema-driven frontmatter panel** — right sidebar with typed fields: title (auto-resizing textarea), date (date picker, timezone-safe display), author (text input), tags (pill input with add/remove), published (toggle showing Published/Draft), description (textarea). All fields sync in real time. Falls back to auto-detected field types when no schema exists.
 - **Document title display** — frontmatter title displays as a prominent read-only label between the topbar and formatting toolbar, always visible while editing.
 - **Save flow UX** — four-state Save button (Saved/unsaved/saving/saved). Post-save confirmation bar slides in below topbar: "Saved · Committed to main · just now · view on GitHub" in green, auto-dismisses after 4 seconds. Cmd+S keyboard shortcut wired.
+- **Save confirmation modal** — modal intercepts direct commits and asks the user to confirm before saving. Includes a "Don't show again" checkbox. Dismissal state persisted to `localStorage` under key `"mdocs-save-confirmation-dismissed"`.
 - **GitHub file link** — subtle ExternalLink icon next to file path in editor topbar, opens raw file on github.com in new tab.
 - **Clickable breadcrumbs** — breadcrumb segments in editor topbar are clickable and navigate back to the correct Miller columns folder level. Replaced the standalone back button. Unsaved changes guard fires on navigation away.
 - **Hover and cursor states** — global `cursor:pointer` and smooth 100ms transitions applied to all interactive elements. Hover backgrounds use `rgba` values for visibility in both light and dark mode.
@@ -65,11 +73,22 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 - TipTap WYSIWYG editor loading file content from GitHub, with markdown toggle (WYSIWYG ↔ raw via Turndown + remark)
 - Direct commit save flow (`POST /api/github/[owner]/[repo]/commit`)
 - PR creation flow: creates branch `mdocs/{username}/{filename}` → commits → opens PR → requests reviewers (`POST /api/github/[owner]/[repo]/pr`)
+- **PR workflow banner** — post-PR confirmation shown as a persistent banner; duplicate toast removed to avoid double feedback.
 - AI inline editing via Claude Sonnet streaming (`POST /api/ai/edit`)
 - AI PR description generation (`POST /api/ai/pr-description`)
 - Inline comments: create, list, resolve, reply, delete — all working end to end
+- **Comments numeric badge** — comment count shown as a numeric badge (e.g. "3") instead of a dot indicator.
 - File starring
-- Repo settings (requirePR, defaultBranch, protectedBranches)
+- **Repo settings page** — full settings UI with: default branch selection, PR-required toggle, protected branches list, image storage folder path, image URL prefix, organize-by-folder toggle. Advanced options in a disclosure section.
+- **Settings nav sidebar** — anchor-link sidebar with `IntersectionObserver`-powered active state highlighting the current section as the user scrolls.
+- **Default repository setting** — global user preference for a default repo, persisted to `User.defaultRepo` in the database via `GET/PATCH /api/settings/user`.
+- **Connect repo button** — redirects users to the GitHub App installation URL to add a new repository.
+- **Image upload and insertion** — drag-and-drop onto editor canvas, toolbar button, and clipboard paste all trigger the upload flow. Image is committed to the repo (configurable storage path via repo settings), and `![alt text](url)` is inserted at cursor. Filename is sanitized and timestamp-prefixed. Supported formats: jpg, jpeg, png, gif, webp. API route: `POST /api/github/[owner]/[repo]/upload-image`.
+- **Link popover** — inline link insert/edit/remove popover replaces the browser `prompt()`. Appears on link selection or toolbar button click. Fields: URL + optional display text. Remove link button included.
+- **Table hover controls** — unified hover zone fix so table row/column insert and delete controls appear correctly without z-index or hit-target issues.
+- **Inline code rendering fix** — Tailwind prose `code::before` / `code::after` override applied so backtick characters do not render around inline code in the editor.
+- **Frontmatter date serialization fix** — dates save as `YYYY-MM-DD` format, not ISO 8601 timestamps, to match standard frontmatter conventions.
+- **Tags serialization fix** — tags save in YAML inline array format (e.g. `[tag1, tag2]`) rather than block list style.
 
 ### Known bugs — fix these before building new features
 
@@ -80,17 +99,23 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 | Selection uses `window.getSelection()` instead of TipTap state | `EditorPageClient.tsx` | Use `editor.state.selection` instead |
 | ~~No Cmd+S keyboard shortcut~~ | ~~Editor~~ | ~~Fixed — `useEffect` keydown listener calls save handler~~ |
 | "Unsaved changes" shows on newly created files before any edits | Editor | New files should start in `clean` state after creation |
-| AI text insertion fix (`execCommand` → `editor.chain()`) | `EditorPageClient.tsx` | Verify this landed — may still be using deprecated API |
 
 ### Not yet built (priority order)
 
-1. ~~Content collections + Webflow-style sidebar navigation~~ — **Done.** Miller columns browser with integrated sidebar, file list view, breadcrumb navigation, all shipped.
-2. ~~Schema-driven frontmatter editor (right sidebar panel with proper field types)~~ — **Done.** `FrontmatterPanel.tsx` renders schema-driven fields when a collection schema exists, falls back to auto-detected field types via `FrontmatterEditor.tsx`. Shared field components in `FrontmatterFields.tsx`. All styled with design system tokens.
-3. ~~New post creation flow~~ — **Done.** "+ New file" modal with title input, live slug preview, date-prefixed filename, pre-populated frontmatter, commits to GitHub and navigates to editor.
-4. Image upload and insertion
-5. Shareable draft preview link
-6. Real-time multiplayer (Yjs) — deprioritized, build last
-7. Folder cache / lazy loading — deferred
+1. ~~Content collections + Webflow-style sidebar navigation~~ — **Done.**
+2. ~~Schema-driven frontmatter editor~~ — **Done.**
+3. ~~New post creation flow~~ — **Done.**
+4. ~~Image upload and insertion~~ — **Done.**
+5. Paste from Google Docs / Notion (verify clean paste behavior — may need custom paste handler)
+6. Slash commands (`/` menu for inserting blocks)
+7. Word count display
+8. Find and replace
+9. Autosave (debounced background save)
+10. Table editing improvements (merge cells, column resize)
+11. Heading anchors / document outline sidebar
+12. Shareable draft preview link
+13. Real-time multiplayer (Yjs) — deprioritized, build last
+14. Folder cache / lazy loading — deferred
 
 ### Existing API routes (do not duplicate)
 
@@ -105,12 +130,14 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 | `/api/github/[owner]/[repo]/pr` | POST | Create PR |
 | `/api/github/[owner]/[repo]/prs` | GET | List MDocs-created PRs |
 | `/api/github/[owner]/[repo]/collaborators` | GET | List repo collaborators |
+| `/api/github/[owner]/[repo]/upload-image` | POST | Commit image file to repo, return URL |
 | `/api/comments` | GET/POST | List/create comments |
 | `/api/comments/[commentId]` | PATCH/DELETE | Resolve/delete comments |
 | `/api/comments/[commentId]/replies` | POST | Add reply |
 | `/api/ai/edit` | POST | AI inline editing (streaming) |
 | `/api/ai/pr-description` | POST | AI PR title/body from diff |
 | `/api/settings/repo` | POST | Upsert repo settings |
+| `/api/settings/user` | GET/PATCH | Get/update user preferences (defaultRepo) |
 | `/api/stars` | GET/POST/DELETE | Star/unstar files |
 | `/api/collections` | GET/POST | List/create collections |
 | `/api/collections/[id]` | PATCH/DELETE | Update/delete a collection |
@@ -120,6 +147,12 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 ### Existing Prisma models (additive changes only)
 
 `Account`, `Session`, `VerificationToken`, `User`, `Comment`, `Reply`, `Suggestion` (DB only — no API routes or UI yet), `StarredFile`, `RepoSettings`, `Collection`
+
+**Notable fields added (do not re-add):**
+- `User.defaultRepo String?` — stores the user's preferred default repository
+- `RepoSettings.imageStorageFolder String?` — folder path where uploaded images are committed (e.g. `public/images`)
+- `RepoSettings.imageUrlPrefix String?` — URL prefix prepended to committed image filenames (e.g. `/images`)
+- `RepoSettings.organizeByFolder Boolean` — whether to organize uploaded images into subfolders by date/slug
 
 ### Key dependencies
 
@@ -159,22 +192,21 @@ Schema-driven right sidebar panel with typed fields. Falls back to auto-detected
 
 ---
 
-### 4. Image Upload and Insertion
+### ~~4. Image Upload and Insertion~~ — SHIPPED
 
-**What it is:** Drag-and-drop or paste an image into the editor, have it committed to the repo, and inserted as a markdown image reference.
+Drag-and-drop, toolbar button, and clipboard paste. Commits image to the repo at a configurable path (set in repo settings). Inserts `![alt text](url)` at cursor. Timestamp-prefixed filenames to avoid collisions. Formats: jpg, jpeg, png, gif, webp. Route: `POST /api/github/[owner]/[repo]/upload-image`.
 
-**Upload flow:**
-- User drags image onto editor canvas OR pastes from clipboard
-- Show upload progress indicator in editor
-- Commit image file to `/public/images/[filename]` in the repo (or configurable path)
-- Insert `![alt text](/images/[filename])` at cursor position
-- Alt text defaults to filename, user can edit inline
+---
 
-**File naming:** Sanitize filename, prepend timestamp to avoid collisions: `1709123456-screenshot.png`
+### 5. Paste from Google Docs / Notion
 
-**Supported formats:** jpg, jpeg, png, gif, webp
+**Status:** Unverified. May need a custom paste handler to strip non-markdown formatting, convert rich text to TipTap-compatible HTML, and handle embedded images. Verify current paste behavior before building.
 
-**Do not:** Build external CDN/Cloudinary integration in v1. Keep it simple — images go into the repo. We can add external storage later.
+---
+
+### 6. Slash Commands
+
+**What it is:** Typing `/` in the editor opens a command menu for inserting blocks (heading, image, table, code block, divider, etc.).
 
 ---
 
@@ -186,22 +218,22 @@ Schema-driven right sidebar panel with typed fields. Falls back to auto-detected
    - **Primary label**: plain English (e.g. "Save changes", "Propose changes", "Publishing to...")
    - **Secondary info**: git context in smaller, muted text below or after the action
    - **After the action**: always show a "view on GitHub" link
-   
+
    Examples:
    ```
    [ Save changes ]
      Will commit directly to main
-   
+
    ✓ Saved
      Committed to main · just now · view on GitHub ↗
-   
+
    [ Propose changes ]
      Opens a pull request for review
-   
+
    ✓ Changes proposed
      PR #42 open · waiting for review · view on GitHub ↗
    ```
-   
+
    Never hide git concepts entirely — they build trust and give technical users confidence. Never lead with git concepts — they confuse non-technical users. Always show both layers.
 
 3. **Save state must always be visible** — persistent indicator in the editor toolbar: `Unsaved changes` / `Saving...` / `Saved · view on GitHub ↗` / `PR #42 open · view on GitHub ↗`
@@ -218,6 +250,7 @@ Schema-driven right sidebar panel with typed fields. Falls back to auto-detected
 - **The dashboard route now renders the integrated sidebar + Miller layout**, not a separate repo card grid. There is no standalone dashboard page.
 - **All frontmatter date display uses UTC-safe parsing** to avoid timezone shift bugs (dates displaying as previous day).
 - **New file creation commits to GitHub immediately** via `POST /api/github/[owner]/[repo]/new-file` — it does not create a local-only draft.
+- **Image uploads commit directly to GitHub** via the GitHub App installation token. Storage path and URL prefix are configured per-repo in `RepoSettings`.
 
 ---
 
