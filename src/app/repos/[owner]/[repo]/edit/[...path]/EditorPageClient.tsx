@@ -778,11 +778,27 @@ function EditorWithRef({
   const TableCell = require("@tiptap/extension-table-cell").TableCell;
   const TableHeader = require("@tiptap/extension-table-header").TableHeader;
   const Underline = require("@tiptap/extension-underline").default;
+  const { CodeBlockLowlight } = require("@tiptap/extension-code-block-lowlight");
   const { EditorImage: TipTapImage } = require("@/components/editor/EditorImage");
   const { Extension } = require("@tiptap/core");
   const { Plugin, PluginKey } = require("prosemirror-state");
   const { Decoration, DecorationSet } = require("prosemirror-view");
   const { ImageUploadPlaceholder: PlaceholderNode } = require("@/components/editor/ImageUploadPlaceholder");
+
+  // Lowlight instance — created once per component mount via ref
+  const lowlightRef = useRef<any>(null);
+  if (!lowlightRef.current) {
+    const { createLowlight } = require("lowlight");
+    const ll = createLowlight();
+    ll.register("javascript", require("highlight.js/lib/languages/javascript"));
+    ll.register("typescript", require("highlight.js/lib/languages/typescript"));
+    ll.register("python", require("highlight.js/lib/languages/python"));
+    ll.register("bash", require("highlight.js/lib/languages/bash"));
+    ll.register("json", require("highlight.js/lib/languages/json"));
+    ll.register("yaml", require("highlight.js/lib/languages/yaml"));
+    ll.register("css", require("highlight.js/lib/languages/css"));
+    lowlightRef.current = ll;
+  }
 
   // Stable ref for image upload callback
   const onImageUploadRef = useRef<typeof onImageUpload>(onImageUpload);
@@ -849,7 +865,8 @@ function EditorWithRef({
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      StarterKit,
+      StarterKit.configure({ codeBlock: false }),
+      CodeBlockLowlight.configure({ lowlight: lowlightRef.current }),
       Underline,
       Link.configure({ openOnClick: false, HTMLAttributes: { class: "editor-link" } }),
       Placeholder.configure({ placeholder: "Start writing..." }),
@@ -905,16 +922,50 @@ function EditorWithRef({
         return true;
       },
       handlePaste: (_view: unknown, event: ClipboardEvent) => {
+        // Image paste takes priority
         const files = event.clipboardData?.files;
-        if (!files || files.length === 0) return false;
-        const imageFile = Array.from(files).find((f) => f.type.startsWith("image/"));
-        if (!imageFile) return false;
-        event.preventDefault();
-        const ed = editorInstanceRef.current;
-        if (ed && onImageUploadRef.current) {
-          onImageUploadRef.current(imageFile, ed);
+        if (files && files.length > 0) {
+          const imageFile = Array.from(files).find((f) => f.type.startsWith("image/"));
+          if (imageFile) {
+            event.preventDefault();
+            const ed = editorInstanceRef.current;
+            if (ed && onImageUploadRef.current) {
+              onImageUploadRef.current(imageFile, ed);
+            }
+            return true;
+          }
         }
-        return true;
+        // Convert backtick markdown syntax to code marks/blocks.
+        // Checks text/plain regardless of whether text/html is also present,
+        // so this works for both plain-text and rich-text (Notion) paste.
+        const text = event.clipboardData?.getData("text/plain");
+        if (text && /`/.test(text)) {
+          event.preventDefault();
+          const ed = editorInstanceRef.current;
+          if (!ed) return true;
+          const { DOMParser: PMDOMParser } = require("prosemirror-model");
+          const html = text
+            .split(/\n{2,}/)
+            .map((block: string) => {
+              const cbMatch = block.match(/^```([\w-]*)\n?([\s\S]*?)```$/);
+              if (cbMatch) {
+                const lang = cbMatch[1];
+                const code = cbMatch[2].trim();
+                return `<pre><code${lang ? ` class="language-${lang}"` : ""}>${code}</code></pre>`;
+              }
+              const inline = block.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+              return `<p>${inline}</p>`;
+            })
+            .join("");
+          const dom = document.createElement("div");
+          dom.innerHTML = html;
+          const slice = PMDOMParser.fromSchema(ed.view.state.schema).parseSlice(dom, {
+            preserveWhitespace: true,
+          });
+          ed.view.dispatch(ed.view.state.tr.replaceSelection(slice));
+          return true;
+        }
+        return false;
       },
     },
   });
