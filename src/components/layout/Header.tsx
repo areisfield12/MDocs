@@ -1,6 +1,8 @@
 "use client";
 
+import { Fragment } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, Settings, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -36,6 +38,18 @@ export function Header({
   repoName,
 }: HeaderProps) {
   const { data: session } = useSession();
+  const router = useRouter();
+
+  const isEditorPage = !!(filePath && repoOwner && repoName);
+  const breadcrumbSegments = filePath ? filePath.split("/") : [];
+
+  function handleBreadcrumbClick(folderPath: string) {
+    if (saveStatus === "unsaved") {
+      const confirmed = confirm("You have unsaved changes. Leave without saving?");
+      if (!confirmed) return;
+    }
+    router.push(`/repos/${repoOwner}/${repoName}?folder=${encodeURIComponent(folderPath)}`);
+  }
 
   return (
     <header className="flex items-center justify-between px-4 py-2.5 bg-surface border-b border-border-secondary h-14 flex-shrink-0">
@@ -52,23 +66,46 @@ export function Header({
           }
         </button>
 
-        {filePath && (
-          <>
-            <span className="text-[13px] text-fg-tertiary truncate max-w-xs font-mono">
-              {filePath}
-            </span>
-            {repoOwner && repoName && (
-              <a
-                href={`https://github.com/${repoOwner}/${repoName}/blob/main/${filePath}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="View file on GitHub"
-                className="ml-2 text-fg-tertiary hover:text-fg-secondary transition-colors duration-100 flex-shrink-0"
-              >
-                <ExternalLink className="h-3 w-3" strokeWidth={1.5} />
-              </a>
-            )}
-          </>
+        {isEditorPage && breadcrumbSegments.length > 0 && (
+          <nav className="flex items-center text-[13px] font-mono truncate max-w-md">
+            {breadcrumbSegments.map((segment, i) => {
+              const isLast = i === breadcrumbSegments.length - 1;
+
+              if (isLast) {
+                const displayName = segment.replace(/\.(md|mdx)$/, "");
+                return (
+                  <Fragment key={i}>
+                    {i > 0 && <span className="text-fg-tertiary mx-1">{"\u203A"}</span>}
+                    <span className="text-fg-secondary">{displayName}</span>
+                  </Fragment>
+                );
+              }
+
+              const folderPath = breadcrumbSegments.slice(0, i + 1).join("/");
+              return (
+                <Fragment key={i}>
+                  {i > 0 && <span className="text-fg-tertiary mx-1">{"\u203A"}</span>}
+                  <button
+                    onClick={() => handleBreadcrumbClick(folderPath)}
+                    className="text-fg-tertiary hover:text-text-primary hover:underline cursor-pointer transition-colors"
+                  >
+                    {segment}
+                  </button>
+                </Fragment>
+              );
+            })}
+          </nav>
+        )}
+        {isEditorPage && (
+          <a
+            href={`https://github.com/${repoOwner}/${repoName}/blob/main/${filePath}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="View file on GitHub"
+            className="ml-2 text-fg-tertiary hover:text-fg-secondary transition-colors duration-100 flex-shrink-0"
+          >
+            <ExternalLink className="h-3 w-3" strokeWidth={1.5} />
+          </a>
         )}
       </div>
 

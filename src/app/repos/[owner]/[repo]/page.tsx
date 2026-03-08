@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -34,13 +35,15 @@ export default async function RepoPage({ params }: RepoPageProps) {
 
   return (
     <AppShell repoOwner={owner} repoName={repo}>
-      <RepoBrowserClient
-        owner={owner}
-        repo={repo}
-        userId={session.user.id}
-        initialStarredPaths={starredFiles.map((s) => s.filePath)}
-        requirePR={repoSettings?.requirePR ?? false}
-      />
+      <Suspense fallback={null}>
+        <RepoBrowserClient
+          owner={owner}
+          repo={repo}
+          userId={session.user.id}
+          initialStarredPaths={starredFiles.map((s) => s.filePath)}
+          requirePR={repoSettings?.requirePR ?? false}
+        />
+      </Suspense>
     </AppShell>
   );
 }
