@@ -623,7 +623,13 @@ function EditorWithRef({
       Underline,
       Link.configure({ openOnClick: false }),
       Placeholder.configure({ placeholder: "Start writing..." }),
-      Table.configure({ resizable: true }),
+      Table.configure({
+        resizable: true,
+        handleWidth: 5,
+        cellMinWidth: 100,
+        lastColumnResizable: true,
+        allowTableNodeSelection: true,
+      }),
       TableRow,
       TableCell,
       TableHeader,
@@ -659,5 +665,15 @@ function EditorWithRef({
     } catch { /* ignore if editor is destroyed */ }
   }, [editor, commentRanges]);
 
-  return <EditorContent editor={editor} className="h-full overflow-y-auto" />;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const TableControls = require("@/components/editor/table/TableControls").TableControls;
+
+  return (
+    <div ref={scrollRef} className="h-full overflow-y-auto relative">
+      <EditorContent editor={editor} />
+      {editor && (
+        <TableControls editor={editor} scrollContainerRef={scrollRef} />
+      )}
+    </div>
+  );
 }

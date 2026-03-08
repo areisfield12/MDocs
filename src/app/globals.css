@@ -200,6 +200,8 @@
   pointer-events: none;
 }
 
+/* No table drag CSS needed — highlights are rendered as React overlay divs */
+
 /* Comment highlight */
 .comment-highlight {
   background-color: var(--color-accent-subtle);
