@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
+import Image from "next/image";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { ConnectButton } from "@/components/landing/ConnectButton";
 import { FolderOpen, PenLine, GitCommitHorizontal } from "lucide-react";
@@ -15,64 +16,89 @@ export default async function LandingPage() {
       <LandingNav isSignedIn={isSignedIn} />
 
       {/* Section 2 — Hero */}
-      <section id="hero" className="py-24 text-center">
+      <section id="hero" className="py-20 lg:py-24">
         <div className="mx-auto px-6" style={{ maxWidth: 1100 }}>
-          {/* Badge */}
-          <div
-            className="inline-flex items-center bg-bg-emphasis border border-border-default text-text-secondary text-xs rounded-full px-4 py-2"
-          >
-            Built for teams using Claude Code, Cursor, and Next.js
-          </div>
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+            {/* Left: Copy */}
+            <div className="flex-1 text-center lg:text-left">
+              {/* Badge */}
+              <div className="inline-flex items-center bg-bg-emphasis border border-border-default text-text-secondary text-xs rounded-full px-4 py-2">
+                Built for teams using Claude Code, Cursor, and Next.js
+              </div>
 
-          {/* Headline */}
-          <h1
-            className="font-display font-bold text-text-primary text-5xl mt-6 mx-auto"
-            style={{ maxWidth: 800 }}
-          >
-            Your website moved to code.
-            <br />
-            Your content team got left behind.
-          </h1>
-
-          {/* Subheadline */}
-          <p
-            className="text-lg text-text-secondary mt-6 mx-auto"
-            style={{ maxWidth: 560, lineHeight: 1.6 }}
-          >
-            Commit gives your content team a real editor for the markdown files
-            living in your GitHub repo — without pulling them into your codebase.
-          </p>
-
-          {/* CTA Button */}
-          <div className="mt-6">
-            {isSignedIn ? (
-              <Link
-                href="/dashboard"
-                className="btn-primary text-base font-medium"
-                style={{ height: 44, paddingLeft: 24, paddingRight: 24 }}
+              {/* Headline */}
+              <h1
+                className="font-display font-bold text-text-primary text-4xl lg:text-5xl mt-6"
+                style={{ lineHeight: 1.15 }}
               >
-                Go to dashboard &rarr;
-              </Link>
-            ) : (
-              <ConnectButton
-                className="btn-primary text-base font-medium"
-                style={{ height: 44, paddingLeft: 24, paddingRight: 24 }}
-              />
-            )}
-          </div>
+                Your website moved to code.
+                <br />
+                Your content team got left behind.
+              </h1>
 
-          {/* Below CTA */}
-          <p className="text-sm text-text-tertiary mt-6">
-            Free to start · No credit card · Your files stay in GitHub
-          </p>
+              {/* Subheadline */}
+              <p
+                className="text-lg text-text-secondary mt-5"
+                style={{ maxWidth: 480, lineHeight: 1.6 }}
+              >
+                Commit gives your content team a real editor for the markdown files
+                living in your GitHub repo — without pulling them into your codebase.
+              </p>
 
-          {/* Terminal line */}
-          <div className="mt-6">
-            <div
-              className="inline-block bg-bg-subtle border border-border-default rounded-md font-mono text-sm text-text-secondary"
-              style={{ padding: "var(--space-2) var(--space-4)" }}
-            >
-              Saved · Committed to main · view on GitHub ↗
+              {/* CTA Button */}
+              <div className="mt-6">
+                {isSignedIn ? (
+                  <Link
+                    href="/dashboard"
+                    className="btn-primary text-base font-medium"
+                    style={{ height: 44, paddingLeft: 24, paddingRight: 24 }}
+                  >
+                    Go to dashboard &rarr;
+                  </Link>
+                ) : (
+                  <ConnectButton
+                    className="btn-primary text-base font-medium"
+                    style={{ height: 44, paddingLeft: 24, paddingRight: 24 }}
+                  />
+                )}
+              </div>
+
+              {/* Below CTA */}
+              <p className="text-sm text-text-tertiary mt-4">
+                Free to start · No credit card · Your files stay in GitHub
+              </p>
+
+              {/* Terminal line */}
+              <div className="mt-5">
+                <div
+                  className="inline-block bg-bg-subtle border border-border-default rounded-md font-mono text-sm text-text-secondary"
+                  style={{ padding: "var(--space-2) var(--space-4)" }}
+                >
+                  Saved · Committed to main · view on GitHub ↗
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Loom demo */}
+            <div className="flex-1 w-full lg:max-w-[520px]">
+              <div
+                className="relative w-full rounded-xl overflow-hidden border border-border-default"
+                style={{
+                  aspectRatio: "16/9",
+                  boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+                }}
+              >
+                <iframe
+                  src="https://www.loom.com/embed/b654d8c2624941c1abdbf56dafce9844"
+                  frameBorder="0"
+                  allowFullScreen
+                  className="absolute inset-0 w-full h-full"
+                  title="Commit product demo"
+                />
+              </div>
+              <p className="text-center text-xs text-text-tertiary mt-3">
+                See how it works — 2 min demo
+              </p>
             </div>
           </div>
         </div>
@@ -186,9 +212,29 @@ export default async function LandingPage() {
             truth.
           </p>
 
+          {/* Editor screenshot — star of the show */}
+          <div className="mt-14 mx-auto" style={{ maxWidth: 960 }}>
+            <div
+              className="rounded-xl overflow-hidden border border-border-default"
+              style={{ boxShadow: "0 12px 48px rgba(0,0,0,0.20)" }}
+            >
+              <Image
+                src="/screenshots/editor.png"
+                alt="Commit editor — WYSIWYG editing with frontmatter panel"
+                width={1400}
+                height={875}
+                className="w-full h-auto block"
+                priority
+              />
+            </div>
+            <p className="text-center text-sm text-text-tertiary mt-3">
+              WYSIWYG editing with live frontmatter fields — no markdown knowledge required.
+            </p>
+          </div>
+
           {/* Feature blocks */}
           <div
-            className="mx-auto mt-12 flex flex-col gap-10"
+            className="mx-auto mt-16 flex flex-col gap-10"
             style={{ maxWidth: 680 }}
           >
             {/* Block 1 */}
@@ -259,6 +305,25 @@ export default async function LandingPage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* File browser screenshot */}
+          <div className="mt-16 mx-auto" style={{ maxWidth: 780 }}>
+            <div
+              className="rounded-xl overflow-hidden border border-border-default"
+              style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.14)" }}
+            >
+              <Image
+                src="/screenshots/file-browser.png"
+                alt="Commit file browser — CMS-style folder navigation"
+                width={1200}
+                height={750}
+                className="w-full h-auto block"
+              />
+            </div>
+            <p className="text-center text-sm text-text-tertiary mt-3">
+              Folders, file titles, status, date, and author — all visible at a glance.
+            </p>
           </div>
         </div>
       </section>
