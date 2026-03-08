@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import {
   Settings,
   ChevronRight,
+  Info,
 } from "lucide-react";
 import { FrontmatterEditor } from "./FrontmatterEditor";
 import {
@@ -188,9 +189,19 @@ function PanelHeader({
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-2.5 border-b border-border">
-      <span className="text-xs font-semibold text-fg-secondary uppercase tracking-wide">
-        {label}
-      </span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-xs font-semibold text-fg-secondary uppercase tracking-wide">
+          {label}
+        </span>
+        <div className="relative group">
+          <Info className="h-3 w-3 text-fg-tertiary cursor-default" />
+          <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 z-50 pointer-events-none invisible group-hover:visible">
+            <div className="bg-surface-overlay text-fg-primary text-xs rounded px-2.5 py-1.5 shadow-md border border-border whitespace-nowrap max-w-[220px] text-center leading-snug">
+              These fields are stored as frontmatter at the top of your markdown file.
+            </div>
+          </div>
+        </div>
+      </div>
       <button
         onClick={onCollapse}
         className="p-1 rounded-sm text-fg-tertiary hover:bg-bg-muted hover:text-text-primary cursor-pointer transition-colors"
