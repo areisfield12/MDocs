@@ -41,9 +41,9 @@ export function formatGitHubError(error: unknown): ApiError {
     }
     if (msg.includes("mdocs is not installed")) {
       return {
-        error: "MDocs app not installed",
+        error: "Commit app not installed",
         actionable:
-          "Install the MDocs GitHub App on this repository or organization to continue.",
+          "Install the Commit GitHub App on this repository or organization to continue.",
       };
     }
   }

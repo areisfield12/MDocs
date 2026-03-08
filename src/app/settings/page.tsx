@@ -66,7 +66,7 @@ export default async function SettingsPage() {
               GitHub App Installation
             </h2>
             <p className="text-sm text-fg-tertiary mb-4">
-              MDocs needs to be installed on your repositories or organization to
+              Commit needs to be installed on your repositories or organization to
               read and write files. Install the GitHub App to get started.
             </p>
             <a
@@ -89,10 +89,10 @@ export default async function SettingsPage() {
           </section>
 
           <section className="bg-surface border border-border rounded-lg p-6">
-            <h2 className="text-base font-semibold text-fg mb-2">About MDocs</h2>
+            <h2 className="text-base font-semibold text-fg mb-2">About Commit</h2>
             <p className="text-sm text-fg-tertiary">
-              MDocs is a Google Docs-style markdown editor for GitHub-native teams.
-              Files always live in your GitHub repositories — MDocs is a lens, not a
+              Commit is a Google Docs-style markdown editor for GitHub-native teams.
+              Files always live in your GitHub repositories — Commit is a lens, not a
               storage layer.
             </p>
             <div className="mt-4 pt-4 border-t border-border-secondary text-xs text-fg-tertiary space-y-1">

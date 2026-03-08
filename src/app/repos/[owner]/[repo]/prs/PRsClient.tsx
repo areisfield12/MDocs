@@ -43,7 +43,7 @@ export function PRsClient({ owner, repo }: PRsClientProps) {
           <h1 className="text-lg font-semibold text-fg tracking-[-0.01em]">Pull Requests</h1>
         </div>
         <p className="text-[13px] text-fg-tertiary mb-6">
-          Pull requests opened via MDocs for{" "}
+          Pull requests opened via Commit for{" "}
           <span className="font-medium text-fg-secondary">
             {owner}/{repo}
           </span>

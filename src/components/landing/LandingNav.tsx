@@ -32,7 +32,7 @@ export function LandingNav({ isSignedIn }: LandingNavProps) {
       <div className="flex items-center gap-3">
         <MDocsMark size={24} />
         <span className="font-display font-bold text-text-primary text-base">
-          MDocs
+          Commit
         </span>
       </div>
       {isSignedIn ? (
