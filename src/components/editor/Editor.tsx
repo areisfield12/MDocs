@@ -56,7 +56,7 @@ export function Editor({
       Underline,
       Link.configure({
         openOnClick: false,
-        HTMLAttributes: { class: "text-blue-600 underline" },
+        HTMLAttributes: { class: "editor-link" },
       }),
       Placeholder.configure({
         placeholder: "Start writing...",
