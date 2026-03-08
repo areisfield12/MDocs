@@ -9,6 +9,8 @@ import { MarkdownToggle } from "@/components/editor/MarkdownToggle";
 import { SaveConfirmationBar } from "@/components/editor/SaveConfirmationBar";
 import { AIEditModal } from "@/components/editor/AIEditModal";
 import { CommentPopover } from "@/components/editor/CommentPopover";
+import { LinkPopover } from "@/components/editor/LinkPopover";
+import { LinkHoverPreview } from "@/components/editor/LinkHoverPreview";
 import { RightPanel } from "@/components/editor/RightPanel";
 import type { RightPanelView } from "@/components/editor/RightPanel";
 import { CreatePRModal } from "@/components/pr/CreatePRModal";
@@ -79,6 +81,7 @@ export function EditorPageClient({
   // Comments — lifted for editor highlights and click-to-open
   const { comments: commentList, refresh: refreshComments, resolveComment, addReply } = useComments({ owner, repo, filePath, commitSha: sha ?? "" });
   const [mainEditorInstance, setMainEditorInstance] = useState<any>(null);
+  const [isLinkPopoverOpen, setIsLinkPopoverOpen] = useState(false);
   const commentRanges = useMemo(() => {
     const unresolved = commentList.filter((c) => !c.resolved);
     if (!mainEditorInstance || unresolved.length === 0) return [];
@@ -414,6 +417,7 @@ export function EditorPageClient({
                 commentRanges={commentRanges}
                 onCommentClick={(id) => { setHighlightedCommentId(id); setRightPanelView("comments"); }}
                 onEditorReady={setMainEditorInstance}
+                onLinkPopoverOpenChange={setIsLinkPopoverOpen}
               />
             ) : (
               <textarea
@@ -428,8 +432,8 @@ export function EditorPageClient({
               />
             )}
 
-            {/* Floating comment popover */}
-            {selection.hasSelection && mode === "wysiwyg" && (
+            {/* Floating comment popover — hidden when link popover is open */}
+            {selection.hasSelection && mode === "wysiwyg" && !isLinkPopoverOpen && (
               <CommentPopover
                 owner={owner}
                 repo={repo}
@@ -503,6 +507,7 @@ function EditorWithToolbar({
   commentRanges,
   onCommentClick,
   onEditorReady: onEditorReadyProp,
+  onLinkPopoverOpenChange,
 }: {
   initialHtml: string;
   onUpdate: (html: string) => void;
@@ -512,6 +517,7 @@ function EditorWithToolbar({
   commentRanges: Array<{ id: string; charStart: number; charEnd: number }>;
   onCommentClick: (id: string) => void;
   onEditorReady?: (editor: import("@tiptap/react").Editor | null) => void;
+  onLinkPopoverOpenChange?: (isOpen: boolean) => void;
 }) {
   const [editorInstance, setEditorInstance] = useState<import("@tiptap/react").Editor | null>(null);
   const handleEditorReady = useCallback((editor: import("@tiptap/react").Editor | null) => {
@@ -519,14 +525,156 @@ function EditorWithToolbar({
     onEditorReadyProp?.(editor);
   }, [onEditorReadyProp]);
 
+  // Notify parent when link popover opens/closes
+  const onLinkPopoverOpenChangeRef = useRef(onLinkPopoverOpenChange);
+  onLinkPopoverOpenChangeRef.current = onLinkPopoverOpenChange;
+
+  // Link popover state
+  const [linkPopover, setLinkPopover] = useState<{
+    isOpen: boolean;
+    initialUrl: string;
+    initialText: string;
+    isEditing: boolean;
+    position: { top: number; left: number };
+  }>({ isOpen: false, initialUrl: "", initialText: "", isEditing: false, position: { top: 0, left: 0 } });
+
+  useEffect(() => {
+    onLinkPopoverOpenChangeRef.current?.(linkPopover.isOpen);
+  }, [linkPopover.isOpen]);
+
+  const handleOpenLinkPopover = useCallback(() => {
+    if (!editorInstance) return;
+    const { from } = editorInstance.state.selection;
+    const existingHref = editorInstance.getAttributes("link").href || "";
+    const isEditing = editorInstance.isActive("link");
+    let linkText = "";
+    if (isEditing) {
+      editorInstance.chain().focus().extendMarkRange("link").run();
+      const { from: lf, to: lt } = editorInstance.state.selection;
+      linkText = editorInstance.state.doc.textBetween(lf, lt, "");
+    }
+    const coords = editorInstance.view.coordsAtPos(from);
+    const top = coords.bottom + 8;
+    const left = Math.min(coords.left, window.innerWidth - 340);
+    setLinkPopover({ isOpen: true, initialUrl: existingHref, initialText: linkText, isEditing, position: { top, left } });
+  }, [editorInstance]);
+
+  // Link hover preview state
+  const [linkHover, setLinkHover] = useState<{
+    isOpen: boolean;
+    href: string;
+    element: HTMLElement | null;
+    position: { top: number; left: number };
+  }>({ isOpen: false, href: "", element: null, position: { top: 0, left: 0 } });
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleLinkHover = useCallback((href: string, rect: DOMRect, element: HTMLElement) => {
+    if (linkPopover.isOpen) return;
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    const top = rect.bottom + 6;
+    const left = Math.min(rect.left, window.innerWidth - 300);
+    setLinkHover({ isOpen: true, href, element, position: { top, left } });
+  }, [linkPopover.isOpen]);
+
+  const handleLinkHoverLeave = useCallback(() => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setLinkHover(prev => ({ ...prev, isOpen: false }));
+    }, 150);
+  }, []);
+
+  const handleLinkHoverEnter = useCallback(() => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+  }, []);
+
+  const handleEditFromPreview = useCallback(() => {
+    if (!editorInstance || !linkHover.element) return;
+    const href = linkHover.href;
+    const pos = linkHover.position;
+
+    // Place cursor on the link and select its full range
+    try {
+      const domPos = editorInstance.view.posAtDOM(linkHover.element, 0);
+      editorInstance.chain().focus().setTextSelection(domPos).extendMarkRange("link").run();
+    } catch {
+      // fallback: just focus
+      editorInstance.commands.focus();
+    }
+
+    const { from, to } = editorInstance.state.selection;
+    const linkText = editorInstance.state.doc.textBetween(from, to, "");
+
+    setLinkHover(prev => ({ ...prev, isOpen: false }));
+    setLinkPopover({ isOpen: true, initialUrl: href, initialText: linkText, isEditing: true, position: { top: pos.top, left: pos.left } });
+  }, [editorInstance, linkHover]);
+
+  const handleApplyLink = useCallback((url: string, text?: string) => {
+    if (!editorInstance) return;
+    if (text !== undefined && linkPopover.isEditing) {
+      // Replace the link text and URL: selection should already cover the link range
+      editorInstance.chain().focus().extendMarkRange("link").deleteSelection().insertContent({
+        type: "text",
+        text,
+        marks: [{ type: "link", attrs: { href: url } }],
+      }).run();
+    } else {
+      editorInstance.chain().focus().setLink({ href: url }).run();
+    }
+    setLinkPopover(prev => ({ ...prev, isOpen: false }));
+  }, [editorInstance, linkPopover.isEditing]);
+
+  const handleRemoveLink = useCallback(() => {
+    if (!editorInstance) return;
+    editorInstance.chain().focus().unsetLink().run();
+    setLinkPopover(prev => ({ ...prev, isOpen: false }));
+  }, [editorInstance]);
+
+  const handleCloseLinkPopover = useCallback(() => {
+    setLinkPopover(prev => ({ ...prev, isOpen: false }));
+  }, []);
+
+  // ⌘K keyboard shortcut to open link popover
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        handleOpenLinkPopover();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [handleOpenLinkPopover]);
+
+  // Hover detection via DOM event delegation on the editor container
+  const handleEditorMouseOver = useCallback((e: React.MouseEvent) => {
+    const target = (e.target as HTMLElement).closest(".editor-link") as HTMLAnchorElement | null;
+    if (!target) return;
+    const href = target.getAttribute("href");
+    if (!href) return;
+    const rect = target.getBoundingClientRect();
+    handleLinkHover(href, rect, target);
+  }, [handleLinkHover]);
+
+  const handleEditorMouseOut = useCallback((e: React.MouseEvent) => {
+    const target = (e.target as HTMLElement).closest(".editor-link");
+    const related = (e.relatedTarget as HTMLElement | null)?.closest?.(".editor-link");
+    if (target && !related) {
+      handleLinkHoverLeave();
+    }
+  }, [handleLinkHoverLeave]);
+
   return (
     <div className="h-full flex flex-col">
       <Toolbar
         editor={editorInstance}
         onAIEdit={onAIEdit}
-        hasSelection={hasSelection}
+        hasSelection={hasSelection && !linkPopover.isOpen}
+        onLinkClick={handleOpenLinkPopover}
       />
-      <div className="flex-1 overflow-hidden">
+      <div
+        className="flex-1 overflow-hidden"
+        onMouseOver={handleEditorMouseOver}
+        onMouseOut={handleEditorMouseOut}
+      >
         <EditorWithRef
           initialHtml={initialHtml}
           onUpdate={onUpdate}
@@ -536,6 +684,27 @@ function EditorWithToolbar({
           onCommentClick={onCommentClick}
         />
       </div>
+      {linkHover.isOpen && !linkPopover.isOpen && (
+        <LinkHoverPreview
+          href={linkHover.href}
+          position={linkHover.position}
+          onEdit={handleEditFromPreview}
+          onClose={() => setLinkHover(prev => ({ ...prev, isOpen: false }))}
+          onMouseEnter={handleLinkHoverEnter}
+          onMouseLeave={handleLinkHoverLeave}
+        />
+      )}
+      {linkPopover.isOpen && (
+        <LinkPopover
+          initialUrl={linkPopover.initialUrl}
+          initialText={linkPopover.initialText}
+          isEditing={linkPopover.isEditing}
+          position={linkPopover.position}
+          onApply={handleApplyLink}
+          onRemove={handleRemoveLink}
+          onClose={handleCloseLinkPopover}
+        />
+      )}
     </div>
   );
 }
@@ -629,7 +798,7 @@ function EditorWithRef({
     extensions: [
       StarterKit,
       Underline,
-      Link.configure({ openOnClick: false }),
+      Link.configure({ openOnClick: false, HTMLAttributes: { class: "editor-link" } }),
       Placeholder.configure({ placeholder: "Start writing..." }),
       Table.configure({ resizable: true }),
       TableRow,
