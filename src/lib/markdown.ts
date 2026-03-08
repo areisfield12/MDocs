@@ -125,6 +125,23 @@ turndownService.addRule("table", {
   },
 });
 
+// Use data-markdown-src for images uploaded via MDocs (stores relative path
+// while src uses a GitHub raw URL for in-editor preview)
+turndownService.addRule("mdocsImage", {
+  filter: (node) => {
+    return (
+      node.nodeName === "IMG" &&
+      node.getAttribute("data-markdown-src") !== null
+    );
+  },
+  replacement: (_content, node) => {
+    const el = node as HTMLElement;
+    const src = el.getAttribute("data-markdown-src") ?? el.getAttribute("src") ?? "";
+    const alt = el.getAttribute("alt") ?? "";
+    return `![${alt}](${src})`;
+  },
+});
+
 // Preserve code blocks with language hints
 turndownService.addRule("fencedCodeBlock", {
   filter: (node) => {

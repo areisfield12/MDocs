@@ -17,6 +17,7 @@ import { CreatePRModal } from "@/components/pr/CreatePRModal";
 import { useGitHubFile } from "@/hooks/useGitHubFile";
 import { useEditorState } from "@/hooks/useEditorState";
 import { useComments } from "@/hooks/useComments";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import { htmlToMarkdown, markdownToHtml } from "@/lib/markdown";
 import { FrontmatterData } from "@/types";
 import { useCollectionSchema } from "@/hooks/useCollectionSchema";
@@ -120,6 +121,13 @@ export function EditorPageClient({
     owner,
     repo,
     filePath,
+  });
+
+  // Image upload
+  const { uploadImage, uploading: imageUploading, firstUploadHint, dismissHint } = useImageUpload({
+    owner,
+    repo,
+    contentPath: filePath,
   });
 
   // Editor ref for programmatic operations
@@ -230,10 +238,14 @@ export function EditorPageClient({
     []
   );
 
-  // Save logic
+  // Save logic — block while image upload is in progress
   const handleSave = useCallback(async () => {
+    if (imageUploading) {
+      toast("Image upload in progress — please wait", { icon: "\u23F3" });
+      return;
+    }
     await editorState.save();
-  }, [editorState]);
+  }, [editorState, imageUploading]);
 
   const handleProposeChanges = useCallback(() => {
     setShowPRModal(true);
@@ -417,6 +429,7 @@ export function EditorPageClient({
                 commentRanges={commentRanges}
                 onCommentClick={(id) => { setHighlightedCommentId(id); setRightPanelView("comments"); }}
                 onEditorReady={setMainEditorInstance}
+                onImageUpload={uploadImage}
                 onLinkPopoverOpenChange={setIsLinkPopoverOpen}
               />
             ) : (
@@ -430,6 +443,17 @@ export function EditorPageClient({
                 placeholder="Write markdown here..."
                 spellCheck={false}
               />
+            )}
+
+            {/* First-upload hint */}
+            {firstUploadHint && (
+              <button
+                onClick={dismissHint}
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-4 py-2 bg-surface-secondary border border-border rounded-lg shadow-md text-xs text-fg-secondary hover:bg-bg-muted transition-colors"
+              >
+                <span>{firstUploadHint}</span>
+                <span className="text-fg-tertiary">&times;</span>
+              </button>
             )}
 
             {/* Floating comment popover — hidden when link popover is open */}
@@ -507,6 +531,7 @@ function EditorWithToolbar({
   commentRanges,
   onCommentClick,
   onEditorReady: onEditorReadyProp,
+  onImageUpload,
   onLinkPopoverOpenChange,
 }: {
   initialHtml: string;
@@ -517,6 +542,7 @@ function EditorWithToolbar({
   commentRanges: Array<{ id: string; charStart: number; charEnd: number }>;
   onCommentClick: (id: string) => void;
   onEditorReady?: (editor: import("@tiptap/react").Editor | null) => void;
+  onImageUpload?: (file: File, editor: import("@tiptap/react").Editor) => Promise<unknown>;
   onLinkPopoverOpenChange?: (isOpen: boolean) => void;
 }) {
   const [editorInstance, setEditorInstance] = useState<import("@tiptap/react").Editor | null>(null);
@@ -524,6 +550,20 @@ function EditorWithToolbar({
     setEditorInstance(editor);
     onEditorReadyProp?.(editor);
   }, [onEditorReadyProp]);
+
+  const handleImageUpload = useCallback(() => {
+    if (!editorInstance || !onImageUpload) return;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (file) {
+        onImageUpload(file, editorInstance);
+      }
+    };
+    input.click();
+  }, [editorInstance, onImageUpload]);
 
   // Notify parent when link popover opens/closes
   const onLinkPopoverOpenChangeRef = useRef(onLinkPopoverOpenChange);
@@ -668,6 +708,7 @@ function EditorWithToolbar({
         editor={editorInstance}
         onAIEdit={onAIEdit}
         hasSelection={hasSelection && !linkPopover.isOpen}
+        onImageUpload={handleImageUpload}
         onLinkClick={handleOpenLinkPopover}
       />
       <div
@@ -682,6 +723,7 @@ function EditorWithToolbar({
           onEditorReady={handleEditorReady}
           commentRanges={commentRanges}
           onCommentClick={onCommentClick}
+          onImageUpload={onImageUpload}
         />
       </div>
       {linkHover.isOpen && !linkPopover.isOpen && (
@@ -717,6 +759,7 @@ function EditorWithRef({
   onEditorReady,
   commentRanges,
   onCommentClick,
+  onImageUpload,
 }: {
   initialHtml: string;
   onUpdate: (html: string) => void;
@@ -724,6 +767,7 @@ function EditorWithRef({
   onEditorReady: (editor: import("@tiptap/react").Editor | null) => void;
   commentRanges: Array<{ id: string; charStart: number; charEnd: number }>;
   onCommentClick: (id: string) => void;
+  onImageUpload?: (file: File, editor: import("@tiptap/react").Editor) => Promise<unknown>;
 }) {
   const { useEditor, EditorContent } = require("@tiptap/react");
   const StarterKit = require("@tiptap/starter-kit").default;
@@ -734,9 +778,15 @@ function EditorWithRef({
   const TableCell = require("@tiptap/extension-table-cell").TableCell;
   const TableHeader = require("@tiptap/extension-table-header").TableHeader;
   const Underline = require("@tiptap/extension-underline").default;
+  const { EditorImage: TipTapImage } = require("@/components/editor/EditorImage");
   const { Extension } = require("@tiptap/core");
   const { Plugin, PluginKey } = require("prosemirror-state");
   const { Decoration, DecorationSet } = require("prosemirror-view");
+  const { ImageUploadPlaceholder: PlaceholderNode } = require("@/components/editor/ImageUploadPlaceholder");
+
+  // Stable ref for image upload callback
+  const onImageUploadRef = useRef<typeof onImageUpload>(onImageUpload);
+  onImageUploadRef.current = onImageUpload;
 
   // Stable callback ref — always current, safe to read from plugin
   const onCommentClickRef = useRef<(id: string) => void>(onCommentClick);
@@ -793,6 +843,9 @@ function EditorWithRef({
     });
   }
 
+  // Stable ref for the editor instance so drag/drop/paste handlers can access it
+  const editorInstanceRef = useRef<import("@tiptap/react").Editor | null>(null);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -810,6 +863,12 @@ function EditorWithRef({
       TableRow,
       TableCell,
       TableHeader,
+      TipTapImage.configure({
+        inline: false,
+        allowBase64: false,
+        HTMLAttributes: { class: "editor-image" },
+      }),
+      PlaceholderNode,
       extensionRef.current,
     ],
     content: initialHtml,
@@ -822,12 +881,40 @@ function EditorWithRef({
       onSelectionChange(from !== to, from, to, text);
     },
     onCreate: ({ editor }: { editor: import("@tiptap/react").Editor }) => {
+      editorInstanceRef.current = editor;
       onEditorReady(editor);
     },
-    onDestroy: () => onEditorReady(null),
+    onDestroy: () => {
+      editorInstanceRef.current = null;
+      onEditorReady(null);
+    },
     editorProps: {
       attributes: {
         class: "prose prose-gray dark:prose-invert max-w-none focus:outline-none min-h-full px-16 py-12",
+      },
+      handleDrop: (_view: unknown, event: DragEvent) => {
+        const files = event.dataTransfer?.files;
+        if (!files || files.length === 0) return false;
+        const imageFile = Array.from(files).find((f) => f.type.startsWith("image/"));
+        if (!imageFile) return false;
+        event.preventDefault();
+        const ed = editorInstanceRef.current;
+        if (ed && onImageUploadRef.current) {
+          onImageUploadRef.current(imageFile, ed);
+        }
+        return true;
+      },
+      handlePaste: (_view: unknown, event: ClipboardEvent) => {
+        const files = event.clipboardData?.files;
+        if (!files || files.length === 0) return false;
+        const imageFile = Array.from(files).find((f) => f.type.startsWith("image/"));
+        if (!imageFile) return false;
+        event.preventDefault();
+        const ed = editorInstanceRef.current;
+        if (ed && onImageUploadRef.current) {
+          onImageUploadRef.current(imageFile, ed);
+        }
+        return true;
       },
     },
   });

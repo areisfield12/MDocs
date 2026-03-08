@@ -13,6 +13,7 @@ import {
   Code2,
   Link2,
   Table,
+  ImageIcon,
   Minus,
   Undo,
   Redo,
@@ -25,6 +26,7 @@ interface ToolbarProps {
   editor: Editor | null;
   onAIEdit?: () => void;
   hasSelection?: boolean;
+  onImageUpload?: () => void;
   onLinkClick?: () => void;
 }
 
@@ -82,7 +84,7 @@ function Divider() {
   return <div className="w-px h-5 bg-border mx-1" />;
 }
 
-export function Toolbar({ editor, onAIEdit, hasSelection, onLinkClick }: ToolbarProps) {
+export function Toolbar({ editor, onAIEdit, hasSelection, onImageUpload, onLinkClick }: ToolbarProps) {
   if (!editor) return null;
 
   const addTable = () => {
@@ -195,6 +197,11 @@ export function Toolbar({ editor, onAIEdit, hasSelection, onLinkClick }: Toolbar
       <ToolbarButton onClick={addTable} label="Insert table">
         <Table className="h-4 w-4" />
       </ToolbarButton>
+      {onImageUpload && (
+        <ToolbarButton onClick={onImageUpload} label="Insert image">
+          <ImageIcon className="h-4 w-4" />
+        </ToolbarButton>
+      )}
       <ToolbarButton
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
         label="Horizontal rule"

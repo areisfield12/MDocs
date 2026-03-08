@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 interface RepoSettings {
   defaultBranch: string;
   requirePR: boolean;
   protectedBranches: string[];
+  imageStorageFolder: string;
+  imageUrlPrefix: string;
+  organizeByFolder: boolean;
 }
 
 interface RepoSettingsClientProps {
@@ -23,8 +27,15 @@ export function RepoSettingsClient({
 }: RepoSettingsClientProps) {
   const [settings, setSettings] = useState<RepoSettings>(initialSettings);
   const [saving, setSaving] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const handleSave = async () => {
+    // Validate imageUrlPrefix starts with "/"
+    if (!settings.imageUrlPrefix.startsWith("/")) {
+      toast.error("Image URL prefix must start with /");
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await fetch(`/api/settings/repo`, {
@@ -73,27 +84,120 @@ export function RepoSettingsClient({
             </p>
           </div>
 
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              id="requirePR"
-              checked={settings.requirePR}
-              onChange={(e) =>
-                setSettings((s) => ({ ...s, requirePR: e.target.checked }))
-              }
-              className="mt-0.5 h-4 w-4 rounded border-border accent-fg"
-            />
+          {/* Require PR — toggle */}
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <label
-                htmlFor="requirePR"
-                className="text-sm font-medium text-fg-secondary cursor-pointer"
-              >
+              <p className="text-sm font-medium text-fg-secondary">
                 Require pull request for all changes
-              </label>
+              </p>
               <p className="text-xs text-fg-tertiary mt-0.5">
                 When enabled, all edits must go through a pull request — direct
                 commits are disabled for this repository.
               </p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0 pt-0.5">
+              <button
+                role="switch"
+                aria-checked={settings.requirePR}
+                onClick={() =>
+                  setSettings((s) => ({ ...s, requirePR: !s.requirePR }))
+                }
+                className={cn(
+                  "relative inline-flex h-5 w-9 items-center rounded-full cursor-pointer transition-colors",
+                  settings.requirePR ? "bg-accent" : "bg-border"
+                )}
+              >
+                <span
+                  className={cn(
+                    "inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform",
+                    settings.requirePR ? "translate-x-[18px]" : "translate-x-[3px]"
+                  )}
+                />
+              </button>
+              <span
+                className={cn(
+                  "text-xs w-12",
+                  settings.requirePR ? "text-success" : "text-fg-tertiary"
+                )}
+              >
+                {settings.requirePR ? "Enabled" : ""}
+              </span>
+            </div>
+          </div>
+
+          {/* Images section */}
+          <div className="pt-4 border-t border-border-secondary">
+            <h2 className="text-sm font-semibold text-fg mb-4">Images</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-fg-secondary block mb-1">
+                  Image storage folder
+                </label>
+                <input
+                  type="text"
+                  value={settings.imageStorageFolder}
+                  onChange={(e) =>
+                    setSettings((s) => ({ ...s, imageStorageFolder: e.target.value.replace(/^\/+/, "") }))
+                  }
+                  placeholder="public/images"
+                  className="w-full px-3 py-2 border border-border rounded-md text-[13px] bg-surface text-fg focus:outline-none focus:ring-2 focus:ring-fg/10 focus:border-fg/20"
+                />
+                <p className="text-xs text-fg-tertiary mt-1">
+                  Where uploaded images are saved in your repository
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-fg-secondary block mb-1">
+                  Image URL prefix
+                </label>
+                <input
+                  type="text"
+                  value={settings.imageUrlPrefix}
+                  onChange={(e) =>
+                    setSettings((s) => ({ ...s, imageUrlPrefix: e.target.value }))
+                  }
+                  placeholder="/images"
+                  className="w-full px-3 py-2 border border-border rounded-md text-[13px] bg-surface text-fg focus:outline-none focus:ring-2 focus:ring-fg/10 focus:border-fg/20"
+                />
+                <p className="text-xs text-fg-tertiary mt-1">
+                  The path prefix written into your markdown. For Next.js, images in public/ are served from / so set this to /images not /public/images.
+                </p>
+              </div>
+
+              {/* Advanced */}
+              <button
+                onClick={() => setAdvancedOpen((v) => !v)}
+                className="text-sm text-fg-tertiary cursor-pointer hover:text-fg-secondary transition-colors"
+              >
+                {advancedOpen ? "▾" : "▸"} Advanced
+              </button>
+
+              {advancedOpen && (
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="organizeByFolder"
+                    checked={settings.organizeByFolder}
+                    onChange={(e) =>
+                      setSettings((s) => ({ ...s, organizeByFolder: e.target.checked }))
+                    }
+                    className="mt-0.5 h-4 w-4 rounded border-border accent-fg"
+                  />
+                  <div>
+                    <label
+                      htmlFor="organizeByFolder"
+                      className="text-sm font-medium text-fg-secondary cursor-pointer"
+                    >
+                      Organize by content folder
+                    </label>
+                    <p className="text-xs text-fg-tertiary mt-0.5">
+                      Automatically sort images into subfolders matching the content folder. Images added to content/blog/ posts go into public/images/blog/
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
