@@ -2,6 +2,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
+import { DefaultRepoSetting } from "@/components/settings/DefaultRepoSetting";
+import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import { Github } from "lucide-react";
 
@@ -12,11 +14,18 @@ export default async function SettingsPage() {
     redirect("/");
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { defaultRepo: true },
+  });
+
   return (
     <AppShell>
       <div className="h-full overflow-y-auto">
         <div className="max-w-2xl mx-auto px-6 py-8">
           <h1 className="text-lg font-semibold text-fg mb-6 tracking-[-0.01em]">Settings</h1>
+
+          <DefaultRepoSetting initialDefaultRepo={user?.defaultRepo ?? null} />
 
           <section className="bg-surface border border-border rounded-lg p-6 mb-4">
             <h2 className="text-[14px] font-semibold text-fg mb-4">Profile</h2>

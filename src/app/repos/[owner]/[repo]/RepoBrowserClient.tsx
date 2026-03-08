@@ -41,17 +41,21 @@ export function RepoBrowserClient({
     Promise.all([
       fetch(`/api/github/${owner}/${repo}/tree`).then((r) => r.json()),
       fetch(`/api/github/${owner}/${repo}/files`).then((r) => r.json()),
-      fetch(`/api/collections?owner=${owner}&repo=${repo}`).then((r) => r.json()),
     ])
-      .then(([treeData, filesData, collectionsData]) => {
+      .then(([treeData, filesData]) => {
         setFolders(treeData.folders ?? []);
         setMarkdownPaths(
           ((filesData.files ?? []) as FileNode[]).map((f) => f.path)
         );
-        setCollections(collectionsData.collections ?? []);
       })
       .catch(() => toast.error("Failed to load repository."))
       .finally(() => setLoading(false));
+
+    // Fetch collections independently so a failure doesn't block the repo browser
+    fetch(`/api/collections?owner=${owner}&repo=${repo}`)
+      .then((r) => r.json())
+      .then((data) => setCollections(data.collections ?? []))
+      .catch(() => {/* collections are non-critical, fail silently */});
   }, [owner, repo]);
 
   // Folders that contain at least one markdown file at any depth
