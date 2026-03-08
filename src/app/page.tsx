@@ -77,7 +77,7 @@ export default async function LandingPage() {
             </div>
 
             {/* Right: Loom demo */}
-            <div className="flex-1 w-full lg:max-w-[520px]">
+            <div className="flex-1 w-full">
               <div
                 className="relative w-full rounded-xl overflow-hidden border border-border-default"
                 style={{
@@ -86,16 +86,13 @@ export default async function LandingPage() {
                 }}
               >
                 <iframe
-                  src="https://www.loom.com/embed/b654d8c2624941c1abdbf56dafce9844"
+                  src="https://www.loom.com/embed/8c78baaeacd241bea7f8a4c3be7fc2c4"
                   frameBorder="0"
                   allowFullScreen
                   className="absolute inset-0 w-full h-full"
                   title="Commit product demo"
                 />
               </div>
-              <p className="text-center text-xs text-text-tertiary mt-3">
-                See how it works — 2 min demo
-              </p>
             </div>
           </div>
         </div>
