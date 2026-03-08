@@ -50,7 +50,7 @@ export function FrontmatterPanel({
       <div className="w-10 border-l border-border bg-surface-secondary flex flex-col items-center pt-3 flex-shrink-0">
         <button
           onClick={() => setCollapsed(false)}
-          className="p-2 text-fg-tertiary hover:text-fg-secondary transition-colors"
+          className="p-1 rounded-sm text-fg-tertiary hover:bg-bg-muted hover:text-text-primary cursor-pointer transition-colors"
           aria-label="Expand document settings"
           title="Document settings"
         >
@@ -134,7 +134,7 @@ function PanelHeader({
       </span>
       <button
         onClick={onCollapse}
-        className="p-1 text-fg-tertiary hover:text-fg-secondary transition-colors"
+        className="p-1 rounded-sm text-fg-tertiary hover:bg-bg-muted hover:text-text-primary cursor-pointer transition-colors"
         aria-label="Collapse panel"
       >
         <ChevronRight className="h-3.5 w-3.5" />

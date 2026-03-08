@@ -50,6 +50,12 @@
   --color-border:           var(--color-border-default);
   --color-border-secondary: var(--color-border-subtle);
 
+  --color-row-hover:      var(--color-row-hover);
+  --color-row-selected:   var(--color-row-selected);
+  --color-draft-bg:       var(--color-draft-bg);
+  --color-draft-text:     var(--color-draft-text);
+  --color-draft-border:   var(--color-draft-border);
+
   /* ─── Typography ─── */
   --font-display:  var(--font-display);
   --font-ui:       var(--font-ui);
@@ -121,6 +127,25 @@
     line-height: var(--leading-base);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Global cursor for interactive elements */
+  button,
+  a,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"] {
+    cursor: pointer;
+  }
+
+  /* Global transition for interactive elements */
+  button,
+  a {
+    transition:
+      background-color var(--duration-fast) var(--easing-default),
+      color var(--duration-fast) var(--easing-default),
+      border-color var(--duration-fast) var(--easing-default),
+      opacity var(--duration-fast) var(--easing-default);
   }
 }
 

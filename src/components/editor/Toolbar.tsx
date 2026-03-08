@@ -53,10 +53,10 @@ function ToolbarButton({
             }}
             disabled={disabled}
             className={cn(
-              "p-1.5 rounded transition-colors",
+              "p-1.5 rounded-sm cursor-pointer transition-colors",
               active
                 ? "bg-fg text-fg-inverted"
-                : "text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary",
+                : "text-fg-tertiary hover:bg-bg-muted hover:text-text-primary",
               disabled && "opacity-30 pointer-events-none"
             )}
           >
@@ -225,7 +225,7 @@ export function Toolbar({ editor, onAIEdit, hasSelection }: ToolbarProps) {
               "flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[12px] font-medium transition-colors",
               hasSelection
                 ? "bg-fg text-fg-inverted hover:bg-fg/90"
-                : "text-fg-tertiary bg-surface-tertiary hover:bg-surface-hover hover:text-fg-secondary"
+                : "text-fg-tertiary bg-surface-tertiary hover:bg-bg-muted hover:text-text-primary"
             )}
           >
             <Sparkles className="h-3.5 w-3.5" />

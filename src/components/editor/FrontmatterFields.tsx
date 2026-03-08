@@ -181,7 +181,7 @@ export function TagsInput({
               {tag}
               <button
                 onClick={() => removeTag(idx)}
-                className="text-text-secondary hover:text-text-primary transition-colors"
+                className="cursor-pointer text-text-secondary hover:text-text-primary transition-colors"
                 aria-label={`Remove ${tag}`}
               >
                 <X className="h-3 w-3" />
@@ -223,7 +223,7 @@ export function ToggleInput({
           aria-checked={value}
           onClick={() => onChange(!value)}
           className={cn(
-            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+            "relative inline-flex h-5 w-9 items-center rounded-full cursor-pointer transition-colors",
             value ? "bg-accent" : "bg-border"
           )}
         >
