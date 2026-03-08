@@ -59,6 +59,8 @@ export function AppShell({
           onSave={onSave}
           onProposeChanges={onProposeChanges}
           filePath={filePath}
+          repoOwner={repoOwner}
+          repoName={repoName}
         />
         <main className="flex-1 overflow-hidden">{children}</main>
       </div>

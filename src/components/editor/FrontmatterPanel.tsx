@@ -25,6 +25,7 @@ interface FrontmatterPanelProps {
   onChange: (data: FrontmatterData) => void;
   schema: SchemaField[] | null;
   collectionLabel: string | null;
+  loading?: boolean;
 }
 
 export function FrontmatterPanel({
@@ -32,6 +33,7 @@ export function FrontmatterPanel({
   onChange,
   schema,
   collectionLabel,
+  loading = false,
 }: FrontmatterPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -54,6 +56,26 @@ export function FrontmatterPanel({
         >
           <Settings className="h-4 w-4" />
         </button>
+      </div>
+    );
+  }
+
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="w-[340px] border-l border-border bg-surface-secondary flex flex-col flex-shrink-0">
+        <PanelHeader
+          label="Document settings"
+          onCollapse={() => setCollapsed(true)}
+        />
+        <div className="px-4 py-3 space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i}>
+              <div className="h-3 w-20 bg-bg-muted rounded-sm animate-pulse mb-2" />
+              <div className="h-8 bg-bg-muted rounded-sm animate-pulse" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
