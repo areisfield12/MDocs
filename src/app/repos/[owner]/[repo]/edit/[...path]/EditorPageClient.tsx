@@ -8,6 +8,7 @@ import { Toolbar } from "@/components/editor/Toolbar";
 import { MarkdownToggle } from "@/components/editor/MarkdownToggle";
 import { SaveConfirmationBar } from "@/components/editor/SaveConfirmationBar";
 import { AIEditModal } from "@/components/editor/AIEditModal";
+import { SaveConfirmModal, SAVE_CONFIRM_DISMISSED_KEY } from "@/components/editor/SaveConfirmModal";
 import { CommentPopover } from "@/components/editor/CommentPopover";
 import { LinkPopover } from "@/components/editor/LinkPopover";
 import { LinkHoverPreview } from "@/components/editor/LinkHoverPreview";
@@ -101,6 +102,7 @@ export function EditorPageClient({
   const [showAIModal, setShowAIModal] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [showPRModal, setShowPRModal] = useState(false);
+  const [showSaveConfirmModal, setShowSaveConfirmModal] = useState(false);
   const [rightPanelView, setRightPanelView] = useState<RightPanelView>("none");
   const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
   const [newlyAddedCommentId, setNewlyAddedCommentId] = useState<string | null>(null);
@@ -238,14 +240,37 @@ export function EditorPageClient({
     []
   );
 
-  // Save logic — block while image upload is in progress
+  // Perform the actual commit after confirmation
+  const executeSave = useCallback(async () => {
+    await editorState.save();
+  }, [editorState]);
+
+  const handleSaveConfirmed = useCallback(
+    async (dontShowAgain: boolean) => {
+      setShowSaveConfirmModal(false);
+      if (dontShowAgain) {
+        localStorage.setItem(SAVE_CONFIRM_DISMISSED_KEY, "true");
+      }
+      await executeSave();
+    },
+    [executeSave]
+  );
+
+  // Save logic — show confirmation modal unless user has dismissed it
   const handleSave = useCallback(async () => {
     if (imageUploading) {
       toast("Image upload in progress — please wait", { icon: "\u23F3" });
       return;
     }
-    await editorState.save();
-  }, [editorState, imageUploading]);
+    const dismissed =
+      typeof window !== "undefined" &&
+      localStorage.getItem(SAVE_CONFIRM_DISMISSED_KEY) === "true";
+    if (dismissed) {
+      await executeSave();
+    } else {
+      setShowSaveConfirmModal(true);
+    }
+  }, [imageUploading, executeSave]);
 
   const handleProposeChanges = useCallback(() => {
     setShowPRModal(true);
@@ -497,6 +522,14 @@ export function EditorPageClient({
       </div>
 
       {/* Modals */}
+      <SaveConfirmModal
+        open={showSaveConfirmModal}
+        onClose={() => setShowSaveConfirmModal(false)}
+        onConfirm={handleSaveConfirmed}
+        branch={branch ?? defaultBranch}
+        repo={repo}
+      />
+
       <AIEditModal
         open={showAIModal}
         onClose={() => setShowAIModal(false)}
