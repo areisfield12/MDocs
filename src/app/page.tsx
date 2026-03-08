@@ -34,7 +34,7 @@ export default async function LandingPage() {
                 className="text-lg text-text-secondary mt-5"
                 style={{ maxWidth: 480, lineHeight: 1.6 }}
               >
-                Your content lives in GitHub. Commit makes content teams feel like it never left your CMS.
+                Commit makes content teams feel like they're editing your website through a CMS, even if your docs live in GitHub.
               </p>
 
               {/* CTA Button */}
