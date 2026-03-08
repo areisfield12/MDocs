@@ -106,7 +106,6 @@ export function CreatePRModal({
         return;
       }
 
-      toast.success(`Pull request #${data.number} created!`);
       onSuccess(data.number, data.url);
       onClose();
     } catch {

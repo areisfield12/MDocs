@@ -34,12 +34,12 @@ export function SaveConfirmationBar({
       // Trigger slide-down on next frame for CSS transition
       requestAnimationFrame(() => setShow(true));
 
-      // Auto-hide after 4 seconds
+      // Auto-hide after 6 seconds
       timerRef.current = setTimeout(() => {
         setShow(false);
         // Wait for slide-up animation to finish before calling onDismiss
         setTimeout(onDismiss, 150);
-      }, 4000);
+      }, 6000);
 
       return () => {
         if (timerRef.current) clearTimeout(timerRef.current);
