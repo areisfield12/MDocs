@@ -5,16 +5,17 @@ import { signIn } from "next-auth/react";
 interface ConnectButtonProps {
   className?: string;
   style?: React.CSSProperties;
+  label?: string;
 }
 
-export function ConnectButton({ className, style }: ConnectButtonProps) {
+export function ConnectButton({ className, style, label }: ConnectButtonProps) {
   return (
     <button
       onClick={() => signIn("github", { callbackUrl: `${window.location.origin}/dashboard` })}
       className={className}
       style={style}
     >
-      Connect your GitHub repo &rarr;
+      {label ?? <>Connect your GitHub repo &rarr;</>}
     </button>
   );
 }
