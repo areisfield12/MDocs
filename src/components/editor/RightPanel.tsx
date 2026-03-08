@@ -117,7 +117,7 @@ export function RightPanel({
 
 function PanelHeader({ label }: { label: string }) {
   return (
-    <div className="flex items-center px-4 py-2.5 border-b border-border flex-shrink-0">
+    <div className="flex items-center px-4 py-3 border-b border-border flex-shrink-0">
       <span className="text-xs font-semibold text-fg-secondary uppercase tracking-wide">
         {label}
       </span>
