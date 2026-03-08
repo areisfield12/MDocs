@@ -1,4 +1,5 @@
 import matter from "gray-matter";
+import yaml from "js-yaml";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -21,14 +22,54 @@ export function extractFrontmatter(raw: string): {
 }
 
 /**
+ * Normalize a frontmatter date value to a plain YYYY-MM-DD string.
+ * Handles Date objects (from gray-matter parsing) and ISO timestamp strings.
+ */
+function normalizeDate(
+  val: string | number | boolean | string[] | null
+): string | number | boolean | string[] | null {
+  if (!val) return val;
+  if (typeof val === "string") return val.split("T")[0];
+  if (val instanceof Date) {
+    const y = val.getUTCFullYear();
+    const m = String(val.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(val.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  return val;
+}
+
+/**
  * Serialize frontmatter data + body back into a raw markdown string.
+ *
+ * Uses JSON_SCHEMA to avoid quoting date-like strings, flowLevel:1 to keep
+ * arrays inline (e.g. tags: [a, b]), and lineWidth:-1 to prevent block
+ * scalars on long strings (e.g. description).
  */
 export function serializeFrontmatter(
   data: FrontmatterData,
   content: string
 ): string {
   if (Object.keys(data).length === 0) return content;
-  return matter.stringify(content, data);
+
+  const normalized = { ...data };
+  if ("date" in normalized) {
+    normalized.date = normalizeDate(normalized.date);
+  }
+
+  return matter.stringify(content, normalized, {
+    engines: {
+      yaml: {
+        parse: (str: string) => yaml.load(str) as Record<string, unknown>,
+        stringify: (obj: object) =>
+          yaml.dump(obj, {
+            flowLevel: 1,
+            lineWidth: -1,
+            schema: yaml.JSON_SCHEMA,
+          }),
+      },
+    },
+  });
 }
 
 // ─── Markdown → HTML (for TipTap) ─────────────────────────────────────────
