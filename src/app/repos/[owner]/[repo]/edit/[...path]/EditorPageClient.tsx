@@ -38,6 +38,8 @@ interface EditorPageClientProps {
   userId: string;
   requirePR: boolean;
   defaultBranch: string;
+  imageStorageFolder: string;
+  imageUrlPrefix: string;
 }
 
 export function EditorPageClient({
@@ -47,6 +49,8 @@ export function EditorPageClient({
   userId,
   requirePR,
   defaultBranch,
+  imageStorageFolder,
+  imageUrlPrefix,
 }: EditorPageClientProps) {
   const {
     loading,
@@ -61,7 +65,7 @@ export function EditorPageClient({
     setFrontmatterData,
     getCurrentRaw,
     reload,
-  } = useGitHubFile({ owner, repo, path: filePath, branch: defaultBranch });
+  } = useGitHubFile({ owner, repo, path: filePath, branch: defaultBranch, imageStorageFolder, imageUrlPrefix });
 
   // Editor mode: WYSIWYG or raw markdown
   const [mode, setMode] = useState<"wysiwyg" | "raw">("wysiwyg");
