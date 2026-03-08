@@ -6,11 +6,11 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Editor } from "@/components/editor/Editor";
 import { Toolbar } from "@/components/editor/Toolbar";
 import { MarkdownToggle } from "@/components/editor/MarkdownToggle";
-import { FrontmatterPanel } from "@/components/editor/FrontmatterPanel";
 import { SaveConfirmationBar } from "@/components/editor/SaveConfirmationBar";
 import { AIEditModal } from "@/components/editor/AIEditModal";
 import { CommentPopover } from "@/components/editor/CommentPopover";
-import { CommentThread } from "@/components/editor/CommentThread";
+import { RightPanel } from "@/components/editor/RightPanel";
+import type { RightPanelView } from "@/components/editor/RightPanel";
 import { CreatePRModal } from "@/components/pr/CreatePRModal";
 import { useGitHubFile } from "@/hooks/useGitHubFile";
 import { useEditorState } from "@/hooks/useEditorState";
@@ -97,8 +97,18 @@ export function EditorPageClient({
   const [showAIModal, setShowAIModal] = useState(false);
   const [selectedText, setSelectedText] = useState("");
   const [showPRModal, setShowPRModal] = useState(false);
-  const [showCommentPanel, setShowCommentPanel] = useState(false);
+  const [rightPanelView, setRightPanelView] = useState<RightPanelView>("none");
   const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
+  const [newlyAddedCommentId, setNewlyAddedCommentId] = useState<string | null>(null);
+
+  const toggleRightPanel = useCallback((panel: "settings" | "comments") => {
+    setRightPanelView((prev) => (prev === panel ? "none" : panel));
+  }, []);
+
+  const unresolvedCount = useMemo(
+    () => commentList.filter((c) => !c.resolved).length,
+    [commentList]
+  );
   const [editingTitle, setEditingTitle] = useState(false);
   const titleInputRef = useRef<HTMLInputElement>(null);
 
@@ -402,7 +412,7 @@ export function EditorPageClient({
                 onAIEdit={handleAIEdit}
                 hasSelection={selection.hasSelection}
                 commentRanges={commentRanges}
-                onCommentClick={(id) => { setHighlightedCommentId(id); setShowCommentPanel(true); }}
+                onCommentClick={(id) => { setHighlightedCommentId(id); setRightPanelView("comments"); }}
                 onEditorReady={setMainEditorInstance}
               />
             ) : (
@@ -428,35 +438,33 @@ export function EditorPageClient({
                 charStart={selection.from}
                 charEnd={selection.to}
                 quotedText={selection.text}
-                onCommentAdded={() => { refreshComments(); setShowCommentPanel(true); }}
+                onCommentAdded={(commentId: string) => {
+                  refreshComments();
+                  setRightPanelView("comments");
+                  setNewlyAddedCommentId(commentId);
+                }}
               />
             )}
           </div>
 
-          {/* Comment sidebar */}
-          {showCommentPanel && (
-            <div className="w-80 border-l border-border flex-shrink-0">
-              <CommentThread
-                comments={commentList}
-                onResolve={resolveComment}
-                onReply={addReply}
-                onRefresh={refreshComments}
-                onClose={() => setShowCommentPanel(false)}
-                highlightedCommentId={highlightedCommentId}
-              />
-            </div>
-          )}
-
-          {/* Frontmatter sidebar panel */}
-          {hasFrontmatter && (
-            <FrontmatterPanel
-              data={currentFrontmatter}
-              onChange={handleFrontmatterChange}
-              schema={collectionSchema}
-              collectionLabel={collectionLabel}
-              loading={loading}
-            />
-          )}
+          {/* Right panel: icon bar + settings/comments */}
+          <RightPanel
+            activePanel={rightPanelView}
+            onToggle={toggleRightPanel}
+            unresolvedCommentCount={unresolvedCount}
+            hasFrontmatter={hasFrontmatter}
+            frontmatterData={currentFrontmatter}
+            onFrontmatterChange={handleFrontmatterChange}
+            schema={collectionSchema}
+            collectionLabel={collectionLabel}
+            frontmatterLoading={loading}
+            comments={commentList}
+            onResolveComment={resolveComment}
+            onReplyComment={addReply}
+            onRefreshComments={refreshComments}
+            highlightedCommentId={highlightedCommentId}
+            newlyAddedCommentId={newlyAddedCommentId}
+          />
         </div>
       </div>
 

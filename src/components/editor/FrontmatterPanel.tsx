@@ -118,6 +118,65 @@ export function FrontmatterPanel({
   );
 }
 
+// ─── Headless content (used by RightPanel) ─────────────────────────────────
+
+interface FrontmatterPanelContentProps {
+  data: FrontmatterData;
+  onChange: (data: FrontmatterData) => void;
+  schema: SchemaField[] | null;
+  collectionLabel: string | null;
+  loading?: boolean;
+}
+
+export function FrontmatterPanelContent({
+  data,
+  onChange,
+  schema,
+  loading = false,
+}: FrontmatterPanelContentProps) {
+  const handleFieldChange = useCallback(
+    (key: string, value: string | number | boolean | string[] | null) => {
+      onChange({ ...data, [key]: value });
+    },
+    [data, onChange]
+  );
+
+  if (loading) {
+    return (
+      <div className="px-4 py-3 space-y-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i}>
+            <div className="h-3 w-20 bg-surface-tertiary rounded-sm animate-pulse mb-2" />
+            <div className="h-8 bg-surface-tertiary rounded-sm animate-pulse" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!schema) {
+    return (
+      <div className="flex-1 overflow-y-auto">
+        <FrontmatterEditor data={data} onChange={onChange} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+      {schema.map((field) => (
+        <SchemaFieldInput
+          key={field.key}
+          field={field}
+          value={data[field.key] ?? field.default ?? null}
+          onChange={(val) => handleFieldChange(field.key, val)}
+        />
+      ))}
+      <ExtraFields data={data} schema={schema} onChange={onChange} />
+    </div>
+  );
+}
+
 // ─── Panel Header ──────────────────────────────────────────────────────────
 
 function PanelHeader({
