@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Loader2, Plus, Search, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Collection, CollectionFile } from "@/types";
+import { NewFileModal } from "@/components/repo/NewFileModal";
 import toast from "react-hot-toast";
 
 interface FileListPanelProps {
@@ -24,6 +25,7 @@ export function FileListPanel({
   const [files, setFiles] = useState<CollectionFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showNewFileModal, setShowNewFileModal] = useState(false);
 
   const label = collection?.label ?? folderPath.split("/").pop() ?? folderPath;
 
@@ -70,9 +72,8 @@ export function FileListPanel({
           </p>
         </div>
         <button
-          disabled
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-fg text-surface text-[13px] font-medium opacity-50 cursor-not-allowed"
-          title="Coming soon"
+          onClick={() => setShowNewFileModal(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-fg text-fg-inverted text-[13px] font-medium hover:bg-fg/90 transition-colors"
         >
           <Plus className="h-3.5 w-3.5" />
           New file
@@ -115,7 +116,7 @@ export function FileListPanel({
               <button
                 key={file.path}
                 onClick={() => onSelectFile(file.path)}
-                className="w-full grid grid-cols-[1fr_100px_120px_120px_120px] gap-2 px-6 items-center border-b border-border text-left hover:bg-surface-hover transition-colors duration-150 group"
+                className="w-full grid grid-cols-[1fr_100px_120px_120px_120px] gap-2 px-6 items-center border-b border-border text-left cursor-pointer hover:bg-row-hover transition-colors duration-150 group"
                 style={{ height: "44px" }}
               >
                 <span className="text-[13px] text-fg font-medium truncate">
@@ -128,7 +129,7 @@ export function FileListPanel({
                   {file.date ? formatDate(file.date) : "—"}
                 </span>
                 <span className="text-[12px] text-fg-tertiary truncate">
-                  {file.author ?? "—"}
+                  {file.author || "—"}
                 </span>
                 <span className="text-[12px] text-fg-tertiary truncate">
                   {file.lastModified
@@ -140,6 +141,15 @@ export function FileListPanel({
           </>
         )}
       </div>
+
+      <NewFileModal
+        open={showNewFileModal}
+        onOpenChange={setShowNewFileModal}
+        owner={owner}
+        repo={repo}
+        folderPath={folderPath}
+        onFileCreated={onSelectFile}
+      />
     </div>
   );
 }
@@ -153,7 +163,7 @@ function StatusPill({ published }: { published: boolean | null }) {
         "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium",
         published
           ? "bg-emerald-500/15 text-emerald-400"
-          : "bg-neutral-500/15 text-fg-tertiary"
+          : "bg-draft-bg text-draft-text border border-draft-border"
       )}
     >
       {published ? "Published" : "Draft"}

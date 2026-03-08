@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Pencil, Check } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Editor } from "@/components/editor/Editor";
 import { Toolbar } from "@/components/editor/Toolbar";
@@ -65,9 +65,11 @@ export function EditorPageClient({
   const [currentHtml, setCurrentHtml] = useState(bodyHtml);
   const [currentFrontmatter, setCurrentFrontmatter] = useState<FrontmatterData>(frontmatterData);
 
-  // Update local state when file loads
+  // Update local state when file loads. Use `sha` as the readiness signal
+  // instead of `bodyHtml` — new files with only frontmatter have an empty
+  // body, so bodyHtml is "" (falsy) and would block initialization forever.
   const initialized = useRef(false);
-  if (!initialized.current && !loading && bodyHtml) {
+  if (!initialized.current && !loading && sha) {
     initialized.current = true;
     setCurrentHtml(bodyHtml);
     setCurrentFrontmatter(frontmatterData);
@@ -97,6 +99,8 @@ export function EditorPageClient({
   const [showPRModal, setShowPRModal] = useState(false);
   const [showCommentPanel, setShowCommentPanel] = useState(false);
   const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Collection schema for typed frontmatter fields
   const { schema: collectionSchema, collectionLabel } = useCollectionSchema({
@@ -325,16 +329,61 @@ export function EditorPageClient({
           onDismiss={dismissConfirmation}
         />
 
-        {/* Toolbar row */}
+        {/* Title + toggle row */}
         <div className="flex items-center border-b border-border">
-          <div className="flex-1">
-            {mode === "wysiwyg" && (
-              <Toolbar
-                editor={null} // Will be updated via EditorWithRef
-                onAIEdit={selection.hasSelection ? handleAIEdit : undefined}
-                hasSelection={selection.hasSelection}
-              />
-            )}
+          <div className="flex-1 px-16 py-2 flex items-center gap-2 min-w-0">
+            {editingTitle ? (
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <input
+                  ref={titleInputRef}
+                  type="text"
+                  defaultValue={String(currentFrontmatter.title ?? "")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const val = titleInputRef.current?.value ?? "";
+                      handleFrontmatterChange({ ...currentFrontmatter, title: val });
+                      setEditingTitle(false);
+                    } else if (e.key === "Escape") {
+                      setEditingTitle(false);
+                    }
+                  }}
+                  onBlur={() => {
+                    const val = titleInputRef.current?.value ?? "";
+                    if (val !== String(currentFrontmatter.title ?? "")) {
+                      handleFrontmatterChange({ ...currentFrontmatter, title: val });
+                    }
+                    setEditingTitle(false);
+                  }}
+                  autoFocus
+                  className="flex-1 min-w-0 text-lg font-semibold text-fg leading-snug bg-transparent border-b-2 border-accent focus:outline-none"
+                />
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    const val = titleInputRef.current?.value ?? "";
+                    handleFrontmatterChange({ ...currentFrontmatter, title: val });
+                    setEditingTitle(false);
+                  }}
+                  className="text-fg-tertiary hover:text-fg flex-shrink-0"
+                  aria-label="Confirm title"
+                >
+                  <Check className="h-4 w-4" />
+                </button>
+              </div>
+            ) : currentFrontmatter.title ? (
+              <div className="group/title flex items-center gap-2 min-w-0">
+                <h1 className="text-lg font-semibold text-fg leading-snug truncate">
+                  {String(currentFrontmatter.title)}
+                </h1>
+                <button
+                  onClick={() => setEditingTitle(true)}
+                  className="text-fg-tertiary hover:text-fg flex-shrink-0 opacity-0 group-hover/title:opacity-100 transition-opacity"
+                  aria-label="Edit title"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : null}
           </div>
           <div className="px-4 py-2 border-l border-border flex-shrink-0">
             <MarkdownToggle mode={mode} onToggle={handleModeToggle} />
@@ -405,6 +454,7 @@ export function EditorPageClient({
               onChange={handleFrontmatterChange}
               schema={collectionSchema}
               collectionLabel={collectionLabel}
+              loading={loading}
             />
           )}
         </div>

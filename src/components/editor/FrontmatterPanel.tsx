@@ -25,6 +25,7 @@ interface FrontmatterPanelProps {
   onChange: (data: FrontmatterData) => void;
   schema: SchemaField[] | null;
   collectionLabel: string | null;
+  loading?: boolean;
 }
 
 export function FrontmatterPanel({
@@ -32,6 +33,7 @@ export function FrontmatterPanel({
   onChange,
   schema,
   collectionLabel,
+  loading = false,
 }: FrontmatterPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -48,12 +50,32 @@ export function FrontmatterPanel({
       <div className="w-10 border-l border-border bg-surface-secondary flex flex-col items-center pt-3 flex-shrink-0">
         <button
           onClick={() => setCollapsed(false)}
-          className="p-2 text-fg-tertiary hover:text-fg-secondary transition-colors"
+          className="p-1 rounded-sm text-fg-tertiary hover:bg-bg-muted hover:text-text-primary cursor-pointer transition-colors"
           aria-label="Expand document settings"
           title="Document settings"
         >
           <Settings className="h-4 w-4" />
         </button>
+      </div>
+    );
+  }
+
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="w-[340px] border-l border-border bg-surface-secondary flex flex-col flex-shrink-0">
+        <PanelHeader
+          label="Document settings"
+          onCollapse={() => setCollapsed(true)}
+        />
+        <div className="px-4 py-3 space-y-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i}>
+              <div className="h-3 w-20 bg-bg-muted rounded-sm animate-pulse mb-2" />
+              <div className="h-8 bg-bg-muted rounded-sm animate-pulse" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -112,7 +134,7 @@ function PanelHeader({
       </span>
       <button
         onClick={onCollapse}
-        className="p-1 text-fg-tertiary hover:text-fg-secondary transition-colors"
+        className="p-1 rounded-sm text-fg-tertiary hover:bg-bg-muted hover:text-text-primary cursor-pointer transition-colors"
         aria-label="Collapse panel"
       >
         <ChevronRight className="h-3.5 w-3.5" />

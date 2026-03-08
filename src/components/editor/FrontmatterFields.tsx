@@ -115,7 +115,7 @@ function normalizeDateValue(value: string): string {
   // Already YYYY-MM-DD — pass through
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
 
-  // ISO with time portion — take date part
+  // ISO with time portion — take date part (avoids Date constructor entirely)
   if (/^\d{4}-\d{2}-\d{2}T/.test(value)) return value.substring(0, 10);
 
   // Numeric string (timestamp) — convert to number first
@@ -125,9 +125,10 @@ function normalizeDateValue(value: string): string {
     : new Date(value);
   if (Number.isNaN(parsed.getTime())) return "";
 
-  const y = parsed.getFullYear();
-  const m = String(parsed.getMonth() + 1).padStart(2, "0");
-  const d = String(parsed.getDate()).padStart(2, "0");
+  // Use UTC methods to avoid local timezone shifting the date back a day
+  const y = parsed.getUTCFullYear();
+  const m = String(parsed.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(parsed.getUTCDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
 
@@ -180,7 +181,7 @@ export function TagsInput({
               {tag}
               <button
                 onClick={() => removeTag(idx)}
-                className="text-text-secondary hover:text-text-primary transition-colors"
+                className="cursor-pointer text-text-secondary hover:text-text-primary transition-colors"
                 aria-label={`Remove ${tag}`}
               >
                 <X className="h-3 w-3" />
@@ -222,7 +223,7 @@ export function ToggleInput({
           aria-checked={value}
           onClick={() => onChange(!value)}
           className={cn(
-            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+            "relative inline-flex h-5 w-9 items-center rounded-full cursor-pointer transition-colors",
             value ? "bg-accent" : "bg-border"
           )}
         >
@@ -278,6 +279,15 @@ export function asString(
 ): string {
   if (v === null || v === undefined) return "";
   if (Array.isArray(v)) return v.join(", ");
+  // gray-matter returns Date objects for date-like YAML values at runtime,
+  // bypassing the TypeScript union. Use UTC to avoid timezone day-shift.
+  if ((v as unknown) instanceof Date) {
+    const date = v as unknown as Date;
+    const y = date.getUTCFullYear();
+    const m = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(date.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
   return String(v);
 }
 

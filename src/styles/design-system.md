@@ -152,13 +152,65 @@ Elevation only, no decoration. No colored shadows. No glow effects.
 
 ---
 
+## Transitions
+
+Subtle, fast, smooth — nothing jarring or bouncy. CSS only, never JavaScript for hover effects.
+
+| Token | Value | Usage |
+|---|---|---|
+| `--duration-fast` | 100ms | Hover/active state transitions |
+| `--duration-default` | 150ms | General transitions (max for color transitions) |
+| `--easing-default` | `cubic-bezier(0.16, 1, 0.3, 1)` | All interactive transitions |
+
+Global rules in `globals.css` apply `cursor: pointer` and base transitions to all `button`, `a`, `[role="button"]`, `[role="tab"]`, and `[role="menuitem"]` elements. Custom interactive components (`div`/`span` with `onClick`) must add `cursor-pointer` via Tailwind.
+
+---
+
+## Hover & Active States
+
+All hover states use `--duration-fast` and `--easing-default`. Do not add `transform: scale()` hover effects (except `.btn-primary:active` at `scale(0.99)`). Do not add `box-shadow` on hover.
+
+### By component type
+
+| Element | Hover | Active/Selected |
+|---|---|---|
+| **Sidebar nav items** | `hover:bg-bg-muted hover:text-text-primary` | `bg-bg-emphasis text-text-primary` |
+| **Sidebar repo rows** | `hover:bg-bg-muted` | `bg-bg-emphasis` + left accent border |
+| **Miller column rows** | `hover:bg-bg-muted` | `bg-accent text-text-inverse` (white text) |
+| **File list rows** | `hover:bg-bg-muted` | — |
+| **Repo cards** | `hover:bg-bg-muted` | — |
+| **Icon buttons** | `hover:bg-bg-muted hover:text-text-primary`, `rounded-sm`, `p-1` (4px) | — |
+| **Breadcrumb segments** | `hover:text-text-primary` | — |
+| **"+ Connect repo"** | `hover:bg-bg-muted hover:text-text-primary` | — |
+| **"+ Add field" link** | `hover:text-accent-hover hover:underline` | — |
+| **Tag pill × remove** | `hover:text-text-primary` | — |
+| **Toggle switch** | `cursor-pointer` (inherent) | — |
+
+### Button hover states
+
+| Class | Hover | Active (mousedown) |
+|---|---|---|
+| `.btn-primary` | `background: --color-accent-hover` | `opacity: 0.9; transform: scale(0.99)` |
+| `.btn-secondary` | `background: --color-bg-overlay; border-color: --color-border-strong` | — |
+| `.btn-ghost` | `background: --color-bg-muted; color: --color-text-primary` | — |
+
+### What NOT to do
+
+- No `transform: scale()` on hover (only `.btn-primary:active` at `0.99`)
+- No `box-shadow` on hover
+- No color transitions longer than 150ms
+- No JavaScript for hover effects — CSS/Tailwind only
+- Do not change selected/active state logic — only layer hover on top
+
+---
+
 ## Component Classes
 
 Defined in `src/styles/components.css`. Use these or compose with Tailwind utilities.
 
 ### Buttons
 
-All buttons: 32px height, 13px font, 500 weight, `--radius-md`, 120ms transition. No uppercase, no wide letter-spacing.
+All buttons: 32px height, 13px font, 500 weight, `--radius-md`, `--duration-fast` transition with `--easing-default`. No uppercase, no wide letter-spacing.
 
 | Class | Background | Border | Text |
 |---|---|---|---|
@@ -224,3 +276,7 @@ In Tailwind v4, use the mapped utilities:
 6. **All spacing must be multiples of 4px.** No arbitrary values.
 7. **Accent blue is `#4f7af8`.** Do not introduce additional accent colors without updating this doc.
 8. **Both modes supported.** Light tokens in `:root`, dark overrides in `.dark`. Keep both in sync when adding new color tokens.
+9. **Every interactive element must have `cursor: pointer`.** Buttons and anchors get it globally via `globals.css`. Custom clickable `div`/`span` elements must add `cursor-pointer` via Tailwind.
+10. **Use design-token-mapped Tailwind classes for hover states.** Use `hover:bg-bg-muted`, `hover:text-text-primary`, etc. — never unmapped names like `hover:bg-surface-hover` or `hover:text-fg-secondary`. See the "Hover & Active States" section for the full reference.
+11. **Icon buttons use `p-1 rounded-sm`** (4px padding, 3px radius) so the hover background fill looks intentional.
+12. **No hover transitions longer than 150ms.** Use `--duration-fast` (100ms) for all hover/active transitions.

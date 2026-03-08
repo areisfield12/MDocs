@@ -147,7 +147,7 @@ function TreeNodes({
             <>
               <button
                 onClick={() => onToggleDir(node.path)}
-                className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-surface-hover transition-colors text-left"
+                className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-bg-muted transition-colors text-left"
                 style={{ paddingLeft: `${16 + depth * 20}px` }}
               >
                 {expandedDirs.has(node.path) ? (
@@ -175,7 +175,7 @@ function TreeNodes({
             </>
           ) : (
             <div
-              className="flex items-center gap-3 px-4 py-2.5 hover:bg-surface-hover transition-colors group"
+              className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-bg-muted transition-colors group"
               style={{ paddingLeft: `${16 + depth * 20}px` }}
             >
               <FileIcon path={node.path} />
@@ -198,7 +198,7 @@ function TreeNodes({
                   onToggleStar(node.path);
                 }}
                 className={cn(
-                  "opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-surface-hover",
+                  "opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-sm hover:bg-bg-muted",
                   starredPaths.includes(node.path) && "opacity-100"
                 )}
                 aria-label={

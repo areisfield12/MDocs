@@ -11,7 +11,7 @@ export function RepoCard({ repo }: RepoCardProps) {
   return (
     <Link
       href={`/repos/${repo.owner}/${repo.name}`}
-      className="block bg-surface border border-border rounded-lg p-4 hover:bg-surface-hover transition-all"
+      className="block bg-surface border border-border rounded-lg p-4 hover:bg-bg-muted transition-all"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

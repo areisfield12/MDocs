@@ -1,7 +1,9 @@
 "use client";
 
+import { Fragment } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, Settings } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { PanelLeftClose, PanelLeftOpen, ChevronDown, LogOut, Settings, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -19,6 +21,8 @@ interface HeaderProps {
   onSave?: () => void;
   onProposeChanges?: () => void;
   filePath?: string;
+  repoOwner?: string;
+  repoName?: string;
 }
 
 export function Header({
@@ -30,8 +34,22 @@ export function Header({
   onSave,
   onProposeChanges,
   filePath,
+  repoOwner,
+  repoName,
 }: HeaderProps) {
   const { data: session } = useSession();
+  const router = useRouter();
+
+  const isEditorPage = !!(filePath && repoOwner && repoName);
+  const breadcrumbSegments = filePath ? filePath.split("/") : [];
+
+  function handleBreadcrumbClick(folderPath: string) {
+    if (saveStatus === "unsaved") {
+      const confirmed = confirm("You have unsaved changes. Leave without saving?");
+      if (!confirmed) return;
+    }
+    router.push(`/repos/${repoOwner}/${repoName}?folder=${encodeURIComponent(folderPath)}`);
+  }
 
   return (
     <header className="flex items-center justify-between px-4 py-2.5 bg-surface border-b border-border-secondary h-14 flex-shrink-0">
@@ -39,7 +57,7 @@ export function Header({
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
-          className="p-1.5 rounded-md text-fg-tertiary hover:bg-surface-hover hover:text-fg-secondary transition-colors"
+          className="p-1 rounded-sm text-fg-tertiary hover:bg-bg-muted hover:text-text-primary cursor-pointer transition-colors"
           aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
         >
           {sidebarOpen
@@ -48,10 +66,46 @@ export function Header({
           }
         </button>
 
-        {filePath && (
-          <span className="text-[13px] text-fg-tertiary truncate max-w-xs font-mono">
-            {filePath}
-          </span>
+        {isEditorPage && breadcrumbSegments.length > 0 && (
+          <nav className="flex items-center text-[13px] font-mono truncate max-w-md">
+            {breadcrumbSegments.map((segment, i) => {
+              const isLast = i === breadcrumbSegments.length - 1;
+
+              if (isLast) {
+                const displayName = segment.replace(/\.(md|mdx)$/, "");
+                return (
+                  <Fragment key={i}>
+                    {i > 0 && <span className="text-fg-tertiary mx-1">{"\u203A"}</span>}
+                    <span className="text-fg-secondary">{displayName}</span>
+                  </Fragment>
+                );
+              }
+
+              const folderPath = breadcrumbSegments.slice(0, i + 1).join("/");
+              return (
+                <Fragment key={i}>
+                  {i > 0 && <span className="text-fg-tertiary mx-1">{"\u203A"}</span>}
+                  <button
+                    onClick={() => handleBreadcrumbClick(folderPath)}
+                    className="text-fg-tertiary hover:text-text-primary hover:underline cursor-pointer transition-colors"
+                  >
+                    {segment}
+                  </button>
+                </Fragment>
+              );
+            })}
+          </nav>
+        )}
+        {isEditorPage && (
+          <a
+            href={`https://github.com/${repoOwner}/${repoName}/blob/main/${filePath}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="View file on GitHub"
+            className="ml-2 text-fg-tertiary hover:text-fg-secondary transition-colors duration-100 flex-shrink-0"
+          >
+            <ExternalLink className="h-3 w-3" strokeWidth={1.5} />
+          </a>
         )}
       </div>
 
@@ -73,7 +127,7 @@ export function Header({
         {session?.user && (
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-surface-hover transition-colors">
+              <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-bg-muted transition-colors">
                 {session.user.image ? (
                   <Image
                     src={session.user.image}
@@ -108,7 +162,7 @@ export function Header({
                   <Link
                     href="/settings"
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 text-fg-secondary hover:bg-surface-hover cursor-pointer outline-none"
+                      "flex items-center gap-2 px-3 py-2 text-fg-secondary hover:bg-bg-muted cursor-pointer outline-none"
                     )}
                   >
                     <Settings className="h-4 w-4" />
@@ -116,7 +170,7 @@ export function Header({
                   </Link>
                 </DropdownMenu.Item>
                 <DropdownMenu.Item
-                  className="flex items-center gap-2 px-3 py-2 text-red-500 hover:bg-surface-hover cursor-pointer outline-none"
+                  className="flex items-center gap-2 px-3 py-2 text-red-500 hover:bg-bg-muted cursor-pointer outline-none"
                   onSelect={() => signOut({ callbackUrl: "/" })}
                 >
                   <LogOut className="h-4 w-4" />
