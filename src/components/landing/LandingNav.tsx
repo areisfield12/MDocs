@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { MDocsMark } from "@/components/ui/MDocsLogo";
+import { Logo } from "@/components/Logo";
 
 interface LandingNavProps {
   isSignedIn: boolean;
@@ -29,12 +29,7 @@ export function LandingNav({ isSignedIn }: LandingNavProps) {
       }`}
       style={scrolled ? { backgroundColor: "color-mix(in srgb, var(--color-bg-base) 80%, transparent)" } : undefined}
     >
-      <div className="flex items-center gap-3">
-        <MDocsMark size={24} />
-        <span className="font-display font-bold text-text-primary text-base">
-          Commit
-        </span>
-      </div>
+      <Logo variant="lockup" size={42} />
       {isSignedIn ? (
         <Link href="/dashboard" className="btn-secondary">
           Go to dashboard &rarr;

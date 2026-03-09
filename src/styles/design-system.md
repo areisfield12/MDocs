@@ -266,6 +266,68 @@ In Tailwind v4, use the mapped utilities:
 
 ---
 
+## Logo & Brand Assets
+
+### Logo kit
+
+The production logo kit lives at `/Downloads/commit-logo-kit/` (source) with copies in:
+
+- **SVGs** → `public/images/logo/` — `lockup-light.svg`, `lockup-dark.svg`, `icon-light.svg`, `icon-dark.svg`, `icon-indigo.svg`
+- **Favicons** → `public/` — `favicon.svg`, `favicon.ico`, `apple-touch-icon.png`, `favicon-192.png`, `favicon-512.png`
+- **Manifest** → `public/site.webmanifest`
+
+### `<Logo>` component
+
+**File:** `src/components/Logo.tsx`
+
+The canonical way to render the logo anywhere in the app. Never use raw `<img>` tags or inline SVG literals — always use this component.
+
+```tsx
+import { Logo } from "@/components/Logo";
+
+// Full lockup (icon + wordmark) — default
+<Logo />
+<Logo variant="lockup" size={24} />
+
+// Icon only
+<Logo variant="icon" size={22} />
+
+// Force a theme instead of auto-detecting
+<Logo theme="light" />
+<Logo theme="dark" />
+```
+
+**Props:**
+
+| Prop | Type | Default | Notes |
+|---|---|---|---|
+| `variant` | `"lockup" \| "icon"` | `"lockup"` | Lockup = icon + "commit" wordmark. Icon = square only. |
+| `theme` | `"light" \| "dark" \| "auto"` | `"auto"` | Auto uses `next-themes` `resolvedTheme` with SSR-safe mount guard. |
+| `size` | `number` | `36` (lockup) / `32` (icon) | Height in px. Lockup width is derived proportionally (352:72 ratio). |
+| `className` | `string` | — | Passed to the `<svg>` element. |
+| `style` | `CSSProperties` | — | Passed to the `<svg>` element. |
+
+The component is `"use client"` because it reads `next-themes`. It always renders something on SSR (defaults to light variant until hydrated).
+
+### Brand colors
+
+| Role | Value |
+|---|---|
+| Primary blue (accent) | `#4f7af8` |
+| Wordmark on light | `#1A1A2E` |
+| Wordmark on dark | `#FFFFFF` |
+| Icon square bg on light | `#FFFFFF` |
+| Icon square bg on dark | `#1E1E30` |
+
+### What NOT to do
+
+- Do not re-create, recolor, or modify the SVG source files.
+- Do not render logo via `<img src="/images/logo/...">` — use `<Logo>` so dark/light switching works.
+- Do not add new one-off logo implementations in individual components — extend `Logo.tsx` instead.
+- The old `MDocsLogo.tsx` / `MDocsMark` component has been deleted. Do not re-create it.
+
+---
+
 ## Rules for Future Sessions
 
 1. **Never use raw hex values** in components. Always reference a token.

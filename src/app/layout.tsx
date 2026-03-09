@@ -18,6 +18,17 @@ export const metadata: Metadata = {
   title: "Commit | Edit docs in your codebase like it's a CMS",
   description:
     "Edit markdown files that live in GitHub with a Google Docs experience — WYSIWYG editing, PR workflows, and AI-assisted authoring.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/site.webmanifest",
+  other: {
+    "theme-color": "#4f7af8",
+  },
 };
 
 export default async function RootLayout({

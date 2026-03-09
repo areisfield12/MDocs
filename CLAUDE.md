@@ -52,7 +52,8 @@ MDocs solves this by giving them a CMS-like interface that reads and writes dire
 - **Frontmatter panel**: Three-file architecture in `src/components/editor/`: `FrontmatterPanel.tsx` (right sidebar wrapper, routes schema vs no-schema), `FrontmatterEditor.tsx` (no-schema fallback with auto-detected field types), `FrontmatterFields.tsx` (shared field components: TextInput, AutoResizeTextInput, DateInput, TagsInput, ToggleInput, SelectInput, plus type coercion helpers and `detectFieldType`). All field components use design system tokens from `src/styles/tokens.css` — never hardcoded Tailwind color classes like `violet-*`.
 - **Navigation**: Miller columns browser replaced the old sidebar folder tree. Left sidebar shows global nav + repo list (no separate dashboard page). `src/app/repos/[owner]/[repo]/RepoBrowserClient.tsx` renders the Miller columns layout.
 - **Design system**: `src/styles/tokens.css` and `design-system.md` define color system, type scale (Geist + DM Sans + Geist Mono), spacing, border radius, shadow, and animation tokens.
-- **Key files**: `src/lib/github-app.ts`, `src/lib/auth.ts`, `src/lib/markdown.ts`, `src/hooks/useEditorState.ts`, `src/components/editor/`, `src/app/repos/[owner]/[repo]/RepoBrowserClient.tsx`
+- **Logo**: `src/components/Logo.tsx` — canonical `<Logo>` component (inline SVG, dark/light auto-switching via `next-themes`). Props: `variant="lockup"|"icon"`, `theme="light"|"dark"|"auto"`, `size`. SVG assets in `public/images/logo/`. Favicons and `site.webmanifest` in `public/`. Full docs in `design-system.md` → "Logo & Brand Assets". Do not render logo via `<img>` — always use this component.
+- **Key files**: `src/lib/github-app.ts`, `src/lib/auth.ts`, `src/lib/markdown.ts`, `src/hooks/useEditorState.ts`, `src/components/editor/`, `src/app/repos/[owner]/[repo]/RepoBrowserClient.tsx`, `src/components/Logo.tsx`
 
 ### What is working
 
