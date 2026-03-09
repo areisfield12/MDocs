@@ -146,7 +146,7 @@ export function Sidebar({
         {/* Connect repo link */}
         <div className="px-2 py-2">
           <a
-            href="https://github.com/apps/mdocs-editor/installations/new"
+            href="https://github.com/apps/commit-editor/installations/new"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] text-fg-tertiary hover:bg-bg-muted hover:text-text-primary transition-colors"

@@ -32,11 +32,11 @@ interface UseGitHubFileResult {
 
 /**
  * Rewrite relative image src attributes in HTML to GitHub raw URLs so images
- * stored in the repo (uploaded via MDocs) render correctly in the editor when
+ * stored in the repo (uploaded via Commit) render correctly in the editor when
  * opening a file from a previous session.
  *
  * Also sets `data-markdown-src` on each rewritten img to the original relative
- * path, so Turndown's mdocsImage rule produces the correct markdown on save.
+ * path, so Turndown's commitImage rule produces the correct markdown on save.
  */
 function rewriteRelativeImageSrcs(
   html: string,

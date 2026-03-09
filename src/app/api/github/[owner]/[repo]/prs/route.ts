@@ -18,14 +18,14 @@ export async function GET(
   try {
     const octokit = await getOctokitForRepo(owner);
 
-    // Fetch open + closed PRs with heads starting with "mdocs/"
+    // Fetch open + closed PRs with heads starting with "commit/"
     const [open, closed] = await Promise.all([
       octokit.rest.pulls.list({ owner, repo, state: "open", per_page: 50 }),
       octokit.rest.pulls.list({ owner, repo, state: "closed", per_page: 20 }),
     ]);
 
     const allPRs = [...open.data, ...closed.data].filter((pr) =>
-      pr.head.ref.startsWith("mdocs/")
+      pr.head.ref.startsWith("commit/")
     );
 
     return NextResponse.json({ prs: allPRs });

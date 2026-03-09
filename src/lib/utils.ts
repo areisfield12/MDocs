@@ -39,7 +39,7 @@ export function formatGitHubError(error: unknown): ApiError {
         actionable: "Sign out and sign back in to refresh your GitHub access.",
       };
     }
-    if (msg.includes("mdocs is not installed")) {
+    if (msg.includes("Commit is not installed")) {
       return {
         error: "Commit app not installed",
         actionable:
@@ -69,14 +69,14 @@ export function encodeBase64(content: string): string {
 }
 
 /**
- * Generate a branch name for MDocs PRs.
- * Format: mdocs/username/filename-timestamp
+ * Generate a branch name for Commit PRs.
+ * Format: commit/username/filename-timestamp
  */
 export function generateBranchName(githubLogin: string, filePath: string): string {
   const filename = filePath.split("/").pop()?.replace(/\.[^.]+$/, "") ?? "file";
   const sanitized = filename.toLowerCase().replace(/[^a-z0-9-]/g, "-");
   const timestamp = Date.now();
-  return `mdocs/${githubLogin}/${sanitized}-${timestamp}`;
+  return `commit/${githubLogin}/${sanitized}-${timestamp}`;
 }
 
 /**

@@ -1,4 +1,4 @@
-# MDocs Design System
+# Commit Design System
 
 Aesthetic target: **Linear.app** — dark, precise, minimal, confident.
 
@@ -23,7 +23,7 @@ Tailwind v4 uses CSS-based configuration via `@theme` in `globals.css` — there
 
 | Role | Font | CSS Variable | Usage |
 |---|---|---|---|
-| Display | Geist Sans | `var(--font-display)` | Headlines H1–H3, MDocs wordmark |
+| Display | Geist Sans | `var(--font-display)` | Headlines H1–H3, Commit wordmark |
 | UI | DM Sans | `var(--font-ui)` | Body text, labels, buttons, navigation, all UI chrome |
 | Mono | Geist Mono | `var(--font-mono)` | File paths, code blocks, commit SHAs, branch names |
 
@@ -324,7 +324,7 @@ The component is `"use client"` because it reads `next-themes`. It always render
 - Do not re-create, recolor, or modify the SVG source files.
 - Do not render logo via `<img src="/images/logo/...">` — use `<Logo>` so dark/light switching works.
 - Do not add new one-off logo implementations in individual components — extend `Logo.tsx` instead.
-- The old `MDocsLogo.tsx` / `MDocsMark` component has been deleted. Do not re-create it.
+- The old `CommitLogo.tsx` / `CommitMark` component has been deleted. Do not re-create it.
 
 ---
 

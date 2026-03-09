@@ -13,7 +13,7 @@ const ACCEPTED_TYPES = new Set([
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 function getHintDismissedKey(owner: string, repo: string): string {
-  return `mdocs-image-hint-dismissed:${owner}/${repo}`;
+  return `commit-image-hint-dismissed:${owner}/${repo}`;
 }
 
 interface UseImageUploadOptions {

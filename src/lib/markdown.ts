@@ -125,9 +125,9 @@ turndownService.addRule("table", {
   },
 });
 
-// Use data-markdown-src for images uploaded via MDocs (stores relative path
+// Use data-markdown-src for images uploaded via Commit (stores relative path
 // while src uses a GitHub raw URL for in-editor preview)
-turndownService.addRule("mdocsImage", {
+turndownService.addRule("commitImage", {
   filter: (node) => {
     return (
       node.nodeName === "IMG" &&

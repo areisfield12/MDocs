@@ -68,7 +68,7 @@ export async function getOctokitForRepo(owner: string): Promise<Octokit> {
   const installationId = await getInstallationIdForOwner(owner);
   if (!installationId) {
     throw new Error(
-      `MDocs is not installed on ${owner}. Please install the GitHub App to continue.`
+      `Commit is not installed on ${owner}. Please install the GitHub App to continue.`
     );
   }
   return getInstallationOctokit(installationId);
