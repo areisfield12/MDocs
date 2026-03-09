@@ -8,6 +8,8 @@ interface ImageComparisonSliderProps {
   rightImage: string;
   leftLabel?: string;
   rightLabel?: string;
+  topLeftLabel?: string;
+  topRightLabel?: string;
   defaultPosition?: number;
   width: number;
   height: number;
@@ -18,6 +20,8 @@ export function ImageComparisonSlider({
   rightImage,
   leftLabel,
   rightLabel,
+  topLeftLabel,
+  topRightLabel,
   defaultPosition = 50,
   width,
   height,
@@ -100,7 +104,8 @@ export function ImageComparisonSlider({
       style={{
         aspectRatio: `${width} / ${height}`,
         cursor: "col-resize",
-        boxShadow: "0 12px 48px rgba(0,0,0,0.20)",
+        boxShadow:
+          "0 0 0 1px rgba(255,255,255,0.08), 0 25px 60px rgba(0,0,0,0.5), 0 0 80px rgba(59,130,246,0.08)",
       }}
       onMouseDown={onMouseDown}
       onTouchStart={onTouchStart}
@@ -139,14 +144,16 @@ export function ImageComparisonSlider({
         }}
       />
 
-      {/* Drag handle */}
+      {/* Drag handle — glowing pill */}
       <div
-        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex items-center justify-center rounded-full bg-white shadow-lg"
+        className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex items-center justify-center"
         style={{
           left: `${position}%`,
-          width: 36,
-          height: 36,
-          boxShadow: "0 2px 12px rgba(0,0,0,0.30)",
+          background: "white",
+          borderRadius: "100px",
+          padding: "6px 12px",
+          boxShadow: "0 0 20px rgba(255,255,255,0.3), 0 2px 12px rgba(0,0,0,0.3)",
+          pointerEvents: "none",
         }}
       >
         <svg
@@ -166,35 +173,115 @@ export function ImageComparisonSlider({
         </svg>
       </div>
 
-      {/* Left label */}
-      {leftLabel && (
+      {/* Top left label — "Before: GitHub" */}
+      {topLeftLabel && (
         <div
-          className="absolute bottom-4 left-4 px-2.5 py-1 rounded-md text-xs font-medium text-white"
+          className="absolute top-4 left-4 pointer-events-none"
           style={{
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(4px)",
             opacity: leftLabelOpacity,
             transition: "opacity 0.1s",
-            pointerEvents: "none",
           }}
         >
-          {leftLabel}
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.7)",
+              background: "rgba(0,0,0,0.5)",
+              backdropFilter: "blur(4px)",
+              borderRadius: 4,
+              padding: "4px 8px",
+              border: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            {topLeftLabel}
+          </span>
         </div>
       )}
 
-      {/* Right label */}
-      {rightLabel && (
+      {/* Top right label — "After: Commit" */}
+      {topRightLabel && (
         <div
-          className="absolute bottom-4 right-4 px-2.5 py-1 rounded-md text-xs font-medium text-white"
+          className="absolute top-4 right-4 pointer-events-none"
           style={{
-            background: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(4px)",
             opacity: rightLabelOpacity,
             transition: "opacity 0.1s",
-            pointerEvents: "none",
           }}
         >
-          {rightLabel}
+          <span
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.7)",
+              background: "rgba(0,0,0,0.5)",
+              backdropFilter: "blur(4px)",
+              borderRadius: 4,
+              padding: "4px 8px",
+              border: "1px solid rgba(255,255,255,0.1)",
+            }}
+          >
+            {topRightLabel}
+          </span>
+        </div>
+      )}
+
+      {/* Bottom left label — pill badge */}
+      {leftLabel && (
+        <div
+          className="absolute bottom-4 left-4 pointer-events-none"
+          style={{
+            opacity: leftLabelOpacity,
+            transition: "opacity 0.1s",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--font-ui)",
+              fontSize: 11,
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.85)",
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(6px)",
+              borderRadius: 100,
+              padding: "4px 10px",
+              border: "1px solid rgba(255,255,255,0.12)",
+            }}
+          >
+            {leftLabel}
+          </span>
+        </div>
+      )}
+
+      {/* Bottom right label — pill badge */}
+      {rightLabel && (
+        <div
+          className="absolute bottom-4 right-4 pointer-events-none"
+          style={{
+            opacity: rightLabelOpacity,
+            transition: "opacity 0.1s",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--font-ui)",
+              fontSize: 11,
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.85)",
+              background: "rgba(0,0,0,0.6)",
+              backdropFilter: "blur(6px)",
+              borderRadius: 100,
+              padding: "4px 10px",
+              border: "1px solid rgba(255,255,255,0.12)",
+            }}
+          >
+            {rightLabel}
+          </span>
         </div>
       )}
     </div>

@@ -308,3 +308,69 @@
   font-family: var(--font-mono);
   font-size: var(--text-sm);
 }
+
+/* ─── Landing page ─── */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Scroll-triggered reveal — applied by LandingReveal component */
+.landing-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 600ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.landing-reveal-img {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.landing-reveal.revealed,
+.landing-reveal-img.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Gradient text utility — for key phrases on dark backgrounds */
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #555555 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gradient section divider — replaces solid border-top on sections */
+.gradient-divider {
+  height: 1px;
+  border: none;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent
+  );
+  margin: 0;
+}
+
+/* CTA glow button — used on hero + footer primary CTAs */
+.btn-cta-glow {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.35);
+  transition:
+    background-color var(--duration-fast) var(--easing-default),
+    box-shadow 200ms ease,
+    transform 200ms ease,
+    opacity var(--duration-fast) var(--easing-default);
+}
+.btn-cta-glow:hover {
+  box-shadow: 0 0 50px rgba(59, 130, 246, 0.55);
+  transform: scale(1.02);
+}
