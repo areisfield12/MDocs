@@ -53,13 +53,14 @@ export function ScrollSteps() {
           className="mx-auto px-6 w-full flex items-center gap-12 lg:gap-20"
           style={{ maxWidth: 1200 }}
         >
-          {/* Left: image stack — larger, ~60% */}
+          {/* Left: image stack — ~60% */}
           <div className="flex-[3] min-w-0">
             <div
               className="relative rounded-xl overflow-hidden border border-border-default"
               style={{
                 aspectRatio: "3456/1916",
-                boxShadow: "0 12px 48px rgba(0,0,0,0.18)",
+                boxShadow:
+                  "0 0 0 1px rgba(255,255,255,0.08), 0 25px 60px rgba(0,0,0,0.5), 0 0 80px rgba(59,130,246,0.08)",
               }}
             >
               {steps.map((step, i) => (
@@ -71,8 +72,7 @@ export function ScrollSteps() {
                     transform: `translateX(${
                       i === activeStep ? 0 : i < activeStep ? -32 : 32
                     }px)`,
-                    transition:
-                      "opacity 0.5s ease, transform 0.5s ease",
+                    transition: "opacity 0.5s ease, transform 0.5s ease",
                     pointerEvents: i === activeStep ? "auto" : "none",
                   }}
                 >
@@ -90,21 +90,56 @@ export function ScrollSteps() {
 
           {/* Right: copy stack — ~40% */}
           <div className="flex-[2] min-w-0 max-w-[400px]">
-            {/* Step dots */}
-            <div className="flex items-center gap-3 mb-8">
+            {/* Step indicator: numbered circles with connecting line */}
+            <div className="flex items-center mb-8">
               {steps.map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-full transition-all duration-300"
-                  style={{
-                    width: i === activeStep ? 24 : 8,
-                    height: 8,
-                    background:
-                      i === activeStep
-                        ? "var(--color-accent)"
-                        : "var(--color-border-default)",
-                  }}
-                />
+                <div key={i} className="flex items-center">
+                  {/* Numbered circle */}
+                  <div
+                    className="flex items-center justify-center rounded-full shrink-0 transition-all duration-300"
+                    style={{
+                      width: 28,
+                      height: 28,
+                      background:
+                        i === activeStep
+                          ? "var(--color-accent)"
+                          : "transparent",
+                      border:
+                        i === activeStep
+                          ? "none"
+                          : `1px solid ${
+                              i < activeStep
+                                ? "var(--color-accent)"
+                                : "var(--color-border-default)"
+                            }`,
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color:
+                        i === activeStep
+                          ? "#fff"
+                          : i < activeStep
+                          ? "var(--color-accent)"
+                          : "var(--color-text-tertiary)",
+                    }}
+                  >
+                    {i + 1}
+                  </div>
+                  {/* Connector line (not after last item) */}
+                  {i < steps.length - 1 && (
+                    <div
+                      className="transition-all duration-500"
+                      style={{
+                        width: 40,
+                        height: 1,
+                        background:
+                          i < activeStep
+                            ? "var(--color-accent)"
+                            : "var(--color-border-default)",
+                      }}
+                    />
+                  )}
+                </div>
               ))}
             </div>
 
@@ -122,18 +157,29 @@ export function ScrollSteps() {
                     transform: `translateY(${
                       i === activeStep ? 0 : i < activeStep ? -20 : 20
                     }px)`,
-                    transition:
-                      "opacity 0.45s ease, transform 0.45s ease",
+                    transition: "opacity 0.45s ease, transform 0.45s ease",
                     pointerEvents: i === activeStep ? "auto" : "none",
+                    borderLeft: "2px solid var(--color-accent)",
+                    paddingLeft: 20,
                   }}
                 >
                   <p
-                    className="text-xs font-medium uppercase text-text-tertiary mb-3"
-                    style={{ letterSpacing: "0.1em" }}
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 11,
+                      fontWeight: 600,
+                      color: "var(--color-accent)",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      marginBottom: 8,
+                    }}
                   >
                     Step {i + 1}
                   </p>
-                  <h3 className="font-display font-bold text-text-primary text-2xl lg:text-3xl mb-4">
+                  <h3
+                    className="font-display font-bold text-text-primary mb-4"
+                    style={{ fontSize: 28, lineHeight: 1.25 }}
+                  >
                     {step.heading}
                   </h3>
                   <p

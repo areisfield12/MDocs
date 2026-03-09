@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { Logo } from "@/components/Logo";
@@ -10,32 +9,31 @@ interface LandingNavProps {
 }
 
 export function LandingNav({ isSignedIn }: LandingNavProps) {
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 0);
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <nav
-      className={`sticky top-0 z-50 flex items-center justify-between px-8 py-5 ${
-        scrolled
-          ? "backdrop-blur-md border-b border-border-subtle"
-          : "border-b border-transparent"
-      }`}
-      style={scrolled ? { backgroundColor: "color-mix(in srgb, var(--color-bg-base) 80%, transparent)" } : undefined}
+      className="sticky top-0 z-50 flex items-center justify-between px-8 py-5"
+      style={{
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        backgroundColor: "rgba(8, 8, 8, 0.8)",
+        borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+      }}
     >
-      <Logo variant="lockup" size={42} />
+      <Logo variant="lockup" size={42} theme="dark" />
       {isSignedIn ? (
-        <Link href="/dashboard" className="btn-secondary">
+        <Link
+          href="/dashboard"
+          className="btn-ghost"
+          style={{ border: "1px solid rgba(255, 255, 255, 0.15)" }}
+        >
           Go to dashboard &rarr;
         </Link>
       ) : (
-        <button onClick={() => signIn("github")} className="btn-secondary">
+        <button
+          onClick={() => signIn("github")}
+          className="btn-ghost"
+          style={{ border: "1px solid rgba(255, 255, 255, 0.15)" }}
+        >
           Sign in with GitHub
         </button>
       )}
