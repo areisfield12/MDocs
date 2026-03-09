@@ -154,10 +154,14 @@ export function Header({
                 align="end"
                 sideOffset={4}
               >
-                <DropdownMenu.Label className="px-3 py-2 text-xs text-fg-tertiary">
-                  {session.user.email}
-                </DropdownMenu.Label>
-                <DropdownMenu.Separator className="h-px bg-border-secondary my-1" />
+                {session.user.email && (
+                  <>
+                    <DropdownMenu.Label className="px-3 py-2 text-xs text-fg-tertiary">
+                      {session.user.email}
+                    </DropdownMenu.Label>
+                    <DropdownMenu.Separator className="h-px bg-border-secondary my-1" />
+                  </>
+                )}
                 <DropdownMenu.Item asChild>
                   <Link
                     href="/settings"
