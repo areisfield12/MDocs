@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Star, Settings, Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RepoInfo } from "@/types";
-import { MDocsMark } from "@/components/ui/MDocsLogo";
+import { Logo } from "@/components/Logo";
 import toast from "react-hot-toast";
 
 interface SidebarProps {
@@ -46,9 +46,8 @@ export function Sidebar({
     <aside className="h-full bg-surface-secondary border-r border-border-secondary flex flex-col">
       {/* Logo */}
       <div className="h-14 px-3 flex items-center">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <MDocsMark size={22} />
-          <span className="text-[15px] font-bold text-fg tracking-[-0.01em]">Commit</span>
+        <Link href="/dashboard" className="flex items-center">
+          <Logo variant="lockup" size={22} />
         </Link>
       </div>
 
