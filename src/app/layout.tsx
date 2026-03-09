@@ -14,10 +14,22 @@ const dmSans = DM_Sans({
   variable: "--font-dm-sans",
 });
 
+const unfurlDescription =
+  "A CMS for teams whose websites live in code. Connect your GitHub repo and let your whole team edit markdown files — no terminal, no VS Code, no waiting on an engineer.";
+
 export const metadata: Metadata = {
   title: "Commit | Edit docs in your codebase like it's a CMS",
-  description:
-    "Edit markdown files that live in GitHub with a Google Docs experience — WYSIWYG editing, PR workflows, and AI-assisted authoring.",
+  description: unfurlDescription,
+  openGraph: {
+    title: "Commit | Edit docs in your codebase like it's a CMS",
+    description: unfurlDescription,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Commit | Edit docs in your codebase like it's a CMS",
+    description: unfurlDescription,
+  },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
