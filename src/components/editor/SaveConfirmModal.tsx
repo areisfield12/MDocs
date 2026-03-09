@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 
-export const SAVE_CONFIRM_DISMISSED_KEY = "mdocs-save-confirmation-dismissed";
+export const SAVE_CONFIRM_DISMISSED_KEY = "commit-save-confirmation-dismissed";
 
 interface SaveConfirmModalProps {
   open: boolean;

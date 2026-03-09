@@ -44,7 +44,7 @@ export async function POST(
 
     const filename = path.split("/").pop() ?? path;
     const commitMessage =
-      message ?? `Update ${filename} via MDocs`;
+      message ?? `Update ${filename} via Commit`;
 
     const { data } = await octokit.rest.repos.createOrUpdateFileContents({
       owner,

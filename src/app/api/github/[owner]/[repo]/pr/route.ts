@@ -71,7 +71,7 @@ export async function POST(
       owner,
       repo,
       path,
-      message: `Update ${filename} via MDocs`,
+      message: `Update ${filename} via Commit`,
       content: encodeBase64(content),
       sha: fileSha,
       branch: branchName,

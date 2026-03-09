@@ -70,7 +70,7 @@ export default async function SettingsPage() {
               read and write files. Install the GitHub App to get started.
             </p>
             <a
-              href={`https://github.com/apps/mdocs-editor/installations/new`}
+              href={`https://github.com/apps/commit-editor/installations/new`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 bg-fg text-fg-inverted rounded-md text-[13px] font-medium hover:bg-fg/90 transition-colors"

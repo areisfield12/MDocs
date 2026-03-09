@@ -110,21 +110,21 @@ Return ONLY valid JSON, no other text.`,
       // Fallback if Claude doesn't return JSON
       return NextResponse.json({
         title: `Update ${filename}`,
-        body: "Updated content via MDocs.",
+        body: "Updated content via Commit.",
       });
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
     return NextResponse.json({
       title: parsed.title ?? `Update ${filename}`,
-      body: parsed.body ?? "Updated content via MDocs.",
+      body: parsed.body ?? "Updated content via Commit.",
     });
   } catch (error) {
     console.error("PR description generation error:", error);
     // Non-fatal — return a fallback
     return NextResponse.json({
       title: `Update ${filename}`,
-      body: "Updated content via MDocs.",
+      body: "Updated content via Commit.",
     });
   }
 }

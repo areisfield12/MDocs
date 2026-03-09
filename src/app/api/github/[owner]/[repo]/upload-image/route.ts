@@ -121,7 +121,7 @@ export async function POST(
       owner,
       repo,
       path: storagePath,
-      message: `Add image ${filename} via MDocs`,
+      message: `Add image ${filename} via Commit`,
       content: base64Content,
       branch,
     });
