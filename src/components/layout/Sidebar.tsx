@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Star, Settings, Loader2, Plus } from "lucide-react";
+import { Settings, Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RepoInfo } from "@/types";
 import { Logo } from "@/components/Logo";
@@ -38,7 +38,6 @@ export function Sidebar({
   }, []);
 
   const navItems = [
-    { href: "/dashboard#starred", icon: Star, label: "Starred" },
     { href: "/settings", icon: Settings, label: "Settings" },
   ];
 
