@@ -136,7 +136,7 @@ export default async function LandingPage() {
                     letterSpacing: "0.01em",
                   }}
                 >
-                  Free to start &nbsp;·&nbsp; GitHub stays your source of truth
+                  Free to start &nbsp;·&nbsp; Maintains GitHub as your source of truth
                 </p>
               </LandingReveal>
 
@@ -170,11 +170,13 @@ export default async function LandingPage() {
             </div>
 
             {/* Right: Loom demo */}
-            <LandingReveal className="flex-1 w-full" type="image" delay={100}>
-              <LoomEmbed
-                src="https://www.loom.com/embed/8c78baaeacd241bea7f8a4c3be7fc2c4?hideEmbedTopBar=true&hide_owner=true&hide_share=true&hide_title=true"
-                boxShadow={SCREENSHOT_SHADOW}
-              />
+            <LandingReveal type="image" delay={100}>
+              <div style={{ width: 505, height: 334 }}>
+                <LoomEmbed
+                  src="https://www.loom.com/embed/8c78baaeacd241bea7f8a4c3be7fc2c4?hideEmbedTopBar=true&hide_owner=true&hide_share=true&hide_title=true"
+                  boxShadow={SCREENSHOT_SHADOW}
+                />
+              </div>
             </LandingReveal>
           </div>
         </div>
