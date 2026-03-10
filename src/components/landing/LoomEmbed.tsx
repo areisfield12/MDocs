@@ -19,9 +19,8 @@ export function LoomEmbed({ src, boxShadow }: LoomEmbedProps) {
 
   return (
     <div
-      className={`${playing ? "" : "animate-float"} relative w-full rounded-xl overflow-hidden border border-border-default`}
+      className={`${playing ? "" : "animate-float"} relative w-full h-full rounded-xl overflow-hidden border border-border-default`}
       style={{
-        aspectRatio: "16/9",
         boxShadow,
         maskImage: "linear-gradient(to bottom, black 80%, transparent)",
         WebkitMaskImage: "linear-gradient(to bottom, black 80%, transparent)",
