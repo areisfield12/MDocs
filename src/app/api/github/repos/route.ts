@@ -11,17 +11,26 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized", actionable: "Sign in to continue." }, { status: 401 });
   }
 
+  const githubLogin = session.user.githubLogin;
+  if (!githubLogin) {
+    return NextResponse.json({ error: "GitHub account not linked", actionable: "Sign in with GitHub to continue." }, { status: 401 });
+  }
+
   try {
     const app = getGitHubApp();
 
-    // List all installations the app has
+    // List all installations the app has, then scope to the current user
     const { data: installations } = await app.octokit.rest.apps.listInstallations({
       per_page: 100,
     });
 
+    const userInstallations = installations.filter(
+      (inst) => inst.account?.login === githubLogin
+    );
+
     const repos: RepoInfo[] = [];
 
-    for (const installation of installations) {
+    for (const installation of userInstallations) {
       const installationOctokit = await app.getInstallationOctokit(installation.id);
 
       // List repos accessible for this installation
